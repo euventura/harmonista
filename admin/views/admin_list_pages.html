@@ -1,0 +1,26 @@
+{{ template "admin_header.html" .}}
+<header>
+    <h2>Páginas</h2>
+    <a href="/admin/{{.subdomain}}/page/novo">Nova Página</a>
+</header>
+<dl>
+    {{ range .pages }}
+
+        <dt>{{ .CreatedAt.Format "02/01/2006" }} <a href="/@/{{$.subdomain}}/{{ .Slug }}">{{ .Title }}</a></dt>
+        <dd>[{{ if .Draft }}Rascunho{{ else }}Publicado{{ end }}] <a href="/admin/{{$.subdomain}}/page/{{ .ID }}">[editar]</a> . <a href="#" onclick="deletePage({{ .ID }}); return false;">[deletar]</a></dd>
+
+    {{ end }}
+</dl>
+
+<script>
+function deletePage(id) {
+    if (!confirm('Tem certeza que deseja deletar esta página?')) {
+        return;
+    }
+    fetch('/admin/{{.subdomain}}/page/' + id, {
+        method: 'DELETE'
+    }).then(() => location.reload());
+}
+</script>
+
+{{ template "admin_footer.html" .}}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="no-index, no-follow">
+
+    <title>◯ᵔ◯ Harmonista : {{ .blog.Title }}</title>
+
+
+    <link rel="stylesheet" href="/public/css/base.css">
+
+    {{ if .blog.Theme }}
+    <style>
+        {{ .blog.Theme }}
+    </style>
+    {{ end }}
+</head>
+<body>
+<main>
+    <header>
+        <h1 class="harmonista">-◯ᵔ◯- Harmonista</h1>
+    </header>
+    <section>
+        <h2>{{ .blog.Title }}</h2>
+        {{ if .blog.Description }}
+
+        <article>
+            {{ .blog.Description }}
+        </article>
+
+        {{ end }}
+    </section>
+
+    {{ template "admin_menu.html" .}}

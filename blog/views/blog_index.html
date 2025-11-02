@@ -1,0 +1,27 @@
+{{ template "blog_header.html" .}}
+
+<main class="blog-post-list">
+    {{ if .blog.Description }}
+    <article class="blog-description">
+        <p>{{ .blog.Description }}</p>
+
+        {{ end }}
+        {{ if .posts }}
+        <ul class="post-list">
+            {{ range .posts }}
+            <li class="post-list-item">
+                <small class="date">{{ .CreatedAt.Format "02/01/2006" }}</small>
+                <a class="item-link" href="/@/{{ $.blog.Subdomain }}/{{ .Slug }}">{{ .Title }}</a>
+            </li>
+            {{ end }}
+        </ul>
+        {{ else }}
+        <div class="blog-empty">
+            <p>Nenhum post ainda</p>
+            <p>Este blog ainda não possui posts publicados.</p>
+        </div>
+        {{ end }}
+    </article>
+</main>
+
+{{ template "blog_footer.html" .}}

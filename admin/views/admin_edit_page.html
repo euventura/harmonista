@@ -1,0 +1,107 @@
+{{ template "admin_header.html" .}}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.css">
+
+<header>
+    <h2>Editar Página</h2>
+</header>
+
+{{if .page}}
+<section>
+    <small>
+        <strong>ID:</strong> {{.page.ID}} |
+        <strong>Criado em:</strong> {{.page.CreatedAt.Format "02/01/2006 15:04"}} |
+        <strong>Atualizado em:</strong> {{.page.UpdatedAt.Format "02/01/2006 15:04"}}
+    </small>
+</section>
+
+<form action="/admin/{{.subdomain}}/page/{{.page.ID}}" method="POST">
+    <label for="title" class="width">
+        Título
+        <input type="text" id="title" name="title" value="{{.page.Title}}" required>
+    </label>
+
+    <label for="txt_content" class="width">
+        Conteúdo (Markdown)
+        <textarea id="txt_content" name="content" rows="20" required>{{.page.Content}}</textarea>
+    </label>
+
+    <input type="hidden" id="draft" name="draft" value="{{if .page.Draft}}true{{else}}false{{end}}">
+
+    {{if .page.Draft}}
+        <button type="submit" name="action" value="save">Salvar</button>
+        <button type="submit" name="action" value="publish">Publicar</button>
+    {{else}}
+        <button type="submit" name="action" value="unpublish">Despublicar</button>
+        <button type="submit" name="action" value="update">Atualizar</button>
+    {{end}}
+    <button type="button" onclick="deletePage({{.page.ID}})">Deletar</button>
+    <button type="button" onclick="window.location.href='/admin/{{.subdomain}}/pages'">Cancelar</button>
+</form>
+{{else}}
+<p>Página não encontrada.</p>
+{{end}}
+
+<script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
+<script>
+    var tinyMDE = new TinyMDE.Editor({textarea: 'txt_content'});
+    const subdomain = '{{.subdomain}}';
+
+    const saveBtn = document.querySelector('button[value="save"]');
+    const publishBtn = document.querySelector('button[value="publish"]');
+    const unpublishBtn = document.querySelector('button[value="unpublish"]');
+    const updateBtn = document.querySelector('button[value="update"]');
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            document.getElementById('draft').value = 'true';
+        });
+    }
+
+    if (publishBtn) {
+        publishBtn.addEventListener('click', function() {
+            document.getElementById('draft').value = 'false';
+        });
+    }
+
+    if (unpublishBtn) {
+        unpublishBtn.addEventListener('click', function() {
+            document.getElementById('draft').value = 'true';
+        });
+    }
+
+    if (updateBtn) {
+        updateBtn.addEventListener('click', function() {
+            document.getElementById('draft').value = 'false';
+        });
+    }
+
+    function deletePage(id) {
+        if (!confirm('Tem certeza que deseja deletar esta página? Esta ação não pode ser desfeita.')) {
+            return;
+        }
+
+        fetch('/admin/' + subdomain + '/page/' + id, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Página deletada com sucesso!');
+                window.location.href = '/admin/' + subdomain + '/pages';
+            } else {
+                return response.json().then(data => {
+                    alert('Erro ao deletar página: ' + (data.error || 'Erro desconhecido'));
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao deletar página: ' + error);
+        });
+    }
+</script>
+
+{{ template "admin_footer.html" .}}

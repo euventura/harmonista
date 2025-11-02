@@ -1,0 +1,26 @@
+{{ template "admin_header.html" .}}
+<header>
+    <h2>Postagens</h2>
+    <a href="/admin/{{.subdomain}}/post/novo">Nova Postagem</a>
+</header>
+<dl>
+    {{ range .posts }}
+
+        <dt>{{ .CreatedAt.Format "02/01/2006" }} <a href="/@/{{$.subdomain}}/{{ .Slug }}">{{ .Title }}</a></dt>
+        <dd>[{{ if .Draft }}Rascunho{{ else }}Publicado{{ end }}] <a href="/admin/{{$.subdomain}}/post/{{ .ID }}">[editar]</a> . <a href="#" onclick="deletePost({{ .ID }}); return false;">[deletar]</a></dd>
+
+    {{ end }}
+</dl>
+
+<script>
+function deletePost(id) {
+    if (!confirm('Tem certeza que deseja deletar este post?')) {
+        return;
+    }
+    fetch('/admin/{{.subdomain}}/post/' + id, {
+        method: 'DELETE'
+    }).then(() => location.reload());
+}
+</script>
+
+{{ template "admin_footer.html" .}}

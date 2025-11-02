@@ -1,0 +1,23 @@
+{{ template "admin_header.html" .}}
+
+<header>
+    <h2>Dashboard</h2>
+</header>
+
+<section>
+    <h3>Meus Blogs</h3>
+    {{if .blogs}}
+    <ul class="blog-list">
+        {{ range .blogs }}
+        <li>
+            <a href="/admin/{{ .Subdomain }}/">{{ .Title }}</a>
+
+        </li>
+        {{ end }}
+    </ul>
+    {{else}}
+    <p>Você ainda não possui blogs.</p>
+    {{end}}
+</section>
+
+{{ template "admin_footer.html" .}}

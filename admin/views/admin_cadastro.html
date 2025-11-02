@@ -1,0 +1,45 @@
+{{ template "admin_header.html" .}}
+
+<h2>Cadastro</h2>
+
+{{if .error}}
+<div class="error">
+    <p>{{ .error }}</p>
+</div>
+{{end}}
+
+<form action="/admin/cadastro" method="POST">
+    <label for="email">
+        Email *
+        <input type="email" id="email" name="email" required>
+    </label>
+
+    <label for="password">
+        Senha *
+        <input type="password" id="password" name="password" required minlength="6">
+    </label>
+
+    <label for="subdomain">
+        Subdomínio do Blog *
+        <input type="text" id="subdomain" name="subdomain" required pattern="[a-z0-9-]+" placeholder="meublog">
+        <small>Apenas letras minúsculas, números e hífens</small>
+    </label>
+
+    <label for="title">
+        Título do Blog *
+        <input type="text" id="title" name="title" required placeholder="Meu Blog Incrível">
+    </label>
+
+    <label for="description">
+        Descrição do Blog
+        <textarea id="description" name="description" rows="5" placeholder="Sobre o que é seu blog..."></textarea>
+    </label>
+
+    <button type="submit">Criar Conta e Blog</button>
+</form>
+
+<p>
+    Já tem uma conta? <a href="/admin/login">Faça login aqui</a>
+</p>
+
+{{ template "admin_footer.html" .}}

@@ -1,0 +1,41 @@
+{{ template "admin_header.html" .}}
+
+<section>
+    <h2>Tema CSS</h2>
+    <form action="/admin/{{.subdomain}}/config" method="POST">
+        <fieldset>
+            <label for="subdomain" class="width">
+                subdominio
+                <input type="text" id="subdomain" name="subdomain" value="{{.blog.Subdomain}}" required>     <small>.harmonista.blog</small>
+            </label>
+
+            <label for="nav" class="width">
+                Navegação (Markdown)
+                <textarea id="nav" name="nav" rows="5">{{.blog.Nav}}</textarea>
+                <small>Links em formato markdown, ex: [Home](/home) [Sobre](/sobre)</small>
+            </label>
+
+            <label>
+                <input type="checkbox" name="isAdult" value="1" {{if .blog.IsAdult}}checked{{end}}>
+                Meu blog possui conteúdo sensivel a menores de idade
+            </label>
+            <label>
+                <input type="checkbox" name="IsListReader" value="1" {{if .blog.IsListReader}}checked{{end}}>
+                Quero meu blog listado na lista de leitura
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <label for="password" class="width">
+                Atualizar senha
+                <input type="password" id="password" name="password">
+
+            </label>
+        </fieldset>
+
+        <button type="submit">Salvar</button>
+    </form>
+</section>
+
+
+{{ template "admin_footer.html" .}}

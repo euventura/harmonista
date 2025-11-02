@@ -1,0 +1,26 @@
+{{ template "admin_header.html" .}}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+
+<section>
+    <h2>Tema CSS</h2>
+    <form action="/admin/{{.subdomain}}/tema" method="POST">
+        <label for="theme">
+            CSS Customizado
+            <textarea id="theme" name="theme" rows="20">{{if .blog}}{{.blog.Theme}}{{end}}</textarea>
+        </label>
+
+        <button type="submit">Salvar</button>
+    </form>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script>
+    var editor = CodeMirror.fromTextArea(document.getElementById('theme'), {
+
+    });
+</script>
+
+{{ template "admin_footer.html" .}}
