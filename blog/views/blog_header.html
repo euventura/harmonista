@@ -4,27 +4,93 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <meta name="keywords" content="{{ .blog.Title }}">
-    <meta property="og:site_name" content="{{ .blog.Title }}">
-
-        {{ if .post }}
-        <meta name="description" content="{{ .post.Content  }}">
-        <meta property="og:title" content="{{ .blog.Title }}: {{ .post.Title }}">
+    <meta name="author" content="{{ .blog.Title }}">
+    <meta name="generator" content="Harmonista">
+    
+    {{ if .post }}
+        <!-- Post specific meta tags -->
+        <meta name="keywords" content="{{ .blog.Title }}, {{ .post.Title }}, {{ .post.Category }}">
+        <meta name="description" content="{{ .post.Content | truncate 160 }}">
+        
+        <!-- Open Graph / Facebook -->
         <meta property="og:type" content="article">
-        <meta property="og:updated_time" content="{{ .post.UpdatedAt }}">
-        <meta property="article:published_time" content="{{ .post.CreatedAt }}">
-        <meta property="article:modified_time" content="{{ .post.UpdatedAt }}">
-        <meta property="article:tag" content="{{ .post.Category }}">
-        <title>{{ .blog.Title }}: {{ .post.Title }}</title>
+        <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
+        <meta property="og:title" content="{{ .post.Title }} - {{ .blog.Title }}">
+        <meta property="og:description" content="{{ .post.Content | truncate 160 }}">
+        <meta property="og:site_name" content="{{ .blog.Title }}">
+        <meta property="og:locale" content="pt_BR">
+        <meta property="article:published_time" content="{{ .post.CreatedAt.Format "2006-01-02T15:04:05Z07:00" }}">
+        <meta property="article:modified_time" content="{{ .post.UpdatedAt.Format "2006-01-02T15:04:05Z07:00" }}">
+        <meta property="article:author" content="{{ .blog.Title }}">
+        <meta property="article:section" content="{{ .post.Category }}">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary">
+        <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
+        <meta property="twitter:title" content="{{ .post.Title }} - {{ .blog.Title }}">
+        <meta property="twitter:description" content="{{ .post.Content | truncate 160 }}">
+        
+        <!-- Additional SEO -->
+        <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
+        
+        <title>{{ .post.Title }} - {{ .blog.Title }}</title>
+    {{ else if .page }}
+        <!-- Page specific meta tags -->
+        <meta name="keywords" content="{{ .blog.Title }}, {{ .page.Title }}">
+        <meta name="description" content="{{ .page.Content | truncate 160 }}">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
+        <meta property="og:title" content="{{ .page.Title }} - {{ .blog.Title }}">
+        <meta property="og:description" content="{{ .page.Content | truncate 160 }}">
+        <meta property="og:site_name" content="{{ .blog.Title }}">
+        <meta property="og:locale" content="pt_BR">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary">
+        <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
+        <meta property="twitter:title" content="{{ .page.Title }} - {{ .blog.Title }}">
+        <meta property="twitter:description" content="{{ .page.Content | truncate 160 }}">
+        
+        <!-- Additional SEO -->
+        <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
+        
+        <title>{{ .page.Title }} - {{ .blog.Title }}</title>
+    {{ else }}
+        <!-- Blog home meta tags -->
+        <meta name="keywords" content="{{ .blog.Title }}, blog, posts, artigos">
+        {{ if .blog.Description }}
+            <meta name="description" content="{{ .blog.Description }}">
+            <meta property="og:description" content="{{ .blog.Description }}">
+            <meta property="twitter:description" content="{{ .blog.Description }}">
         {{ else }}
-            {{ if .blog.Description }}
-                <meta name="description" content="{{ .blog.Description }}">
-                <meta property="og:description" content="{{ .blog.Description }}">
-            {{ else }}
-                <meta name="description" content="{{ .blog.Title }} - Blog">
-            {{ end }}
-    <title>{{ .blog.Title }}</title>
+            <meta name="description" content="{{ .blog.Title }} - Blog pessoal na plataforma Harmonista">
+            <meta property="og:description" content="{{ .blog.Title }} - Blog pessoal na plataforma Harmonista">
+            <meta property="twitter:description" content="{{ .blog.Title }} - Blog pessoal na plataforma Harmonista">
+        {{ end }}
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}">
+        <meta property="og:title" content="{{ .blog.Title }}">
+        <meta property="og:site_name" content="{{ .blog.Title }}">
+        <meta property="og:locale" content="pt_BR">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary">
+        <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}">
+        <meta property="twitter:title" content="{{ .blog.Title }}">
+        
+        <!-- Additional SEO -->
+        <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}">
+        
+        <title>{{ .blog.Title }}</title>
     {{ end }}
+    
+    <!-- Additional SEO -->
+    <meta name="theme-color" content="#1f2328">
+    <link rel="sitemap" type="application/xml" href="{{ domain }}/sitemap.xml">
 
     <link rel="stylesheet" href="/public/css/base.css">
 
