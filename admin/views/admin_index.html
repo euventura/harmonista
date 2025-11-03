@@ -11,7 +11,7 @@
 
     <label for="description">
         Página inicial
-        <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25"></textarea>
+        <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25"> </textarea>
     </label>
 
     <button type="submit">Salvar</button>
@@ -20,9 +20,12 @@
 <script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
     var tinyMDE = new TinyMDE.Editor({textarea: 'description'});
-    {{if .blog}}{{if .blog.Description}}
-    tinyMDE.setContent('{{.blog.Description}}');
-    {{end}}{{end}}
+    {{if .blog}}
+        {{if .blog.Description}}
+            tinyMDE.setContent('{{.blog.Description}} ');
+        {{end}}
+
+    {{end}}
 </script>
 
 {{ template "admin_footer.html" .}}

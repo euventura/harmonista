@@ -9,12 +9,6 @@
                 <input type="text" id="subdomain" name="subdomain" value="{{.blog.Subdomain}}" required>     <small>.harmonista.org</small>
             </label>
 
-            <label for="nav" class="width">
-                Navegação (Markdown)
-                <textarea id="nav" name="nav" rows="5">{{.blog.Nav}}</textarea>
-                <small>Links em formato markdown, ex: [Home](/home) [Sobre](/sobre)</small>
-            </label>
-
             <label>
                 <input type="checkbox" name="isAdult" value="1" {{if .blog.IsAdult}}checked{{end}}>
                 Meu blog possui conteúdo sensivel a menores de idade

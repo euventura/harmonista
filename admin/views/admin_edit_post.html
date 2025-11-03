@@ -29,7 +29,7 @@
         <label for="txt_content" class="width">
             Conteúdo (Markdown)
         </label>
-        <textarea id="txt_content" name="content" rows="20" required>{{.post.Content}}</textarea>
+        <textarea id="txt_content" name="content" rows="20" required> {{.post.Content}}</textarea>
 
         <section>
             <input type="hidden" id="draft" name="draft" value="{{if .post.Draft}}true{{else}}false{{end}}">
