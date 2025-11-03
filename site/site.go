@@ -27,7 +27,7 @@ func (s *SiteModule) RegisterRoutes(router *gin.Engine) {
 func (s *SiteModule) index(c *gin.Context) {
 	domain := os.Getenv("DOMAIN")
 	if domain == "" {
-		domain = "http://localhost:8080"
+		domain = "http://localhost/"
 	}
 
 	c.HTML(http.StatusOK, "site_index.html", gin.H{
@@ -38,7 +38,7 @@ func (s *SiteModule) index(c *gin.Context) {
 func (s *SiteModule) listReader(c *gin.Context) {
 	domain := os.Getenv("DOMAIN")
 	if domain == "" {
-		domain = "http://localhost:8080"
+		domain = "http://localhost/"
 	}
 
 	// Buscar todos os posts de blogs que tem isListReader = true
@@ -96,7 +96,7 @@ func (s *SiteModule) listReaderByTag(c *gin.Context) {
 	tagName := c.Param("tagName")
 	domain := os.Getenv("DOMAIN")
 	if domain == "" {
-		domain = "http://localhost:8080"
+		domain = "http://localhost/"
 	}
 
 	// Buscar a tag pelo nome

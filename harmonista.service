@@ -1,0 +1,25 @@
+[Unit]
+Description=Harmonista Web Application
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/harmonista
+Environment="PATH=/usr/local/go/bin:/usr/bin:/bin"
+EnvironmentFile=/var/www/harmonista/.env
+ExecStart=/var/www/harmonista/harmonista
+Restart=always
+RestartSec=5
+
+# Configurações de segurança
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=harmonista
+
+[Install]
+WantedBy=multi-user.target

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"path/filepath"
 	"regexp"
@@ -249,6 +250,7 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 
 	// Sempre mostra a página de sucesso, mas informa se houve erro no envio
 	if emailErr != nil {
+		log.Printf("Erro ao enviar email de verificação para %s: %v", user.Email, emailErr)
 		c.HTML(http.StatusOK, "admin_cadastro_success.html", gin.H{
 			"email":      user.Email,
 			"emailError": "Erro ao enviar email: " + emailErr.Error() + ". Entre em contato com o suporte.",

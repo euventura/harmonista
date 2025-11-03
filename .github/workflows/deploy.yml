@@ -1,0 +1,129 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - master  # Dispara quando houver push na branch master
+  workflow_dispatch:  # Permite execução manual pelo GitHub
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'  # Ajuste para a versão do Go que você usa
+
+      - name: Build application
+        run: |
+          echo "Building Harmonista..."
+          GO111MODULE=on go build -o harmonista .
+          chmod +x harmonista
+
+      - name: Create deployment directory structure
+        run: |
+          mkdir -p deploy
+          cp harmonista deploy/
+
+          # Copiar diretórios necessários
+          cp -r public deploy/ 2>/dev/null || true
+          cp -r admin deploy/ 2>/dev/null || true
+          cp -r site deploy/ 2>/dev/null || true
+          cp -r blog deploy/ 2>/dev/null || true
+
+          # Copiar arquivo de serviço
+          cp harmonista.service deploy/ 2>/dev/null || true
+
+      - name: Deploy to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          # Instalar sshpass
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+          # Criar diretório remoto
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
+            "$SSH_USER@$SSH_HOST" \
+            "sudo mkdir -p /var/www/harmonista && sudo chown -R $SSH_USER:$SSH_USER /var/www/harmonista"
+
+          # Parar o serviço
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
+            "$SSH_USER@$SSH_HOST" \
+            "sudo systemctl stop harmonista 2>/dev/null || true"
+
+          # Enviar binário
+          sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no \
+            deploy/harmonista "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
+
+          # Enviar diretórios
+          for dir in public admin site blog; do
+            if [ -d "deploy/$dir" ]; then
+              sshpass -p "$SSH_PASSWORD" scp -r -o StrictHostKeyChecking=no \
+                "deploy/$dir" "$SSH_USER@$SSH_HOST:/var/www/harmonista/" || true
+            fi
+          done
+
+      - name: Configure and start service
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
+            "$SSH_USER@$SSH_HOST" << 'ENDSSH'
+          set -e
+
+          # Configurar permissões
+          sudo chown -R www-data:www-data /var/www/harmonista
+          sudo chmod +x /var/www/harmonista/harmonista
+
+          # Criar arquivo de serviço systemd
+          sudo tee /etc/systemd/system/harmonista.service > /dev/null << 'EOF'
+[Unit]
+Description=Harmonista Web Application
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/harmonista
+Environment="PATH=/usr/local/go/bin:/usr/bin:/bin"
+EnvironmentFile=/var/www/harmonista/.env
+ExecStart=/var/www/harmonista/harmonista
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=harmonista
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+          # Recarregar e iniciar serviço
+          sudo systemctl daemon-reload
+          sudo systemctl enable harmonista
+          sudo systemctl start harmonista
+
+          # Verificar status
+          sleep 2
+          sudo systemctl status harmonista --no-pager
+ENDSSH
+
+      - name: Deployment complete
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "Application deployed to: /var/www/harmonista"
