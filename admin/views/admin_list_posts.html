@@ -6,8 +6,10 @@
 <dl>
     {{ range .posts }}
 
-        <dt>{{ .CreatedAt.Format "02/01/2006" }} <a href="/@/{{$.subdomain}}/{{ .Slug }}">{{ .Title }}</a></dt>
-        <dd>[{{ if .Draft }}Rascunho{{ else }}Publicado{{ end }}] <a href="/admin/{{$.subdomain}}/post/{{ .ID }}">[editar]</a> . <a href="#" onclick="deletePost({{ .ID }}); return false;">[deletar]</a></dd>
+        <dt>{{ .CreatedAt.Format "02/01/2006" }}  <a href="/admin/{{$.subdomain}}/post/{{ .ID }}">{{ .Title }}</a> </dt>
+        <dd>
+            <small class="muted">{{ if .Draft }}[R]{{ end }} {{ domain }}/@/{{$.subdomain}}/{{ .Slug }}</small><br>
+        </dd>
 
     {{ end }}
 </dl>

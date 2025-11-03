@@ -3,15 +3,70 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
 
+<style>
+    .themes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 5px;
+        margin-bottom: 30px;
+    }
+    .theme-card {
+        text-align: center;
+    }
+    .theme-card h3 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+    }
+    .theme-preview {
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        width: 64px;
+        height: 64px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .theme-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    .theme-buttons button {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+</style>
+
 <section>
-    <h2>Tema CSS</h2>
+    <h2>Temas Disponíveis</h2>
+
+    {{if .themes}}
+    <div class="themes-grid">
+        {{range .themes}}
+        <div class="theme-card">
+            <h3>{{.}}</h3>
+            <iframe class="theme-preview" src="/public/images/theme.html?css=/public/css/temas/{{.}}" scrolling="no"></iframe>
+            <div class="theme-buttons">
+                <button onclick="visualizarTema('/public/css/temas/{{.}}')">Visualizar</button>
+                <button onclick="aplicarTema('{{.}}')">Aplicar</button>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <p>Nenhum tema disponível.</p>
+    {{end}}
+</section>
+
+<section>
+    <h2>CSS Customizado</h2>
     <form action="/admin/{{.subdomain}}/tema" method="POST">
         <label for="theme">
-            CSS Customizado
+            Editar CSS Diretamente
             <textarea id="theme" name="theme" rows="20">{{if .blog}}{{.blog.Theme}}{{end}}</textarea>
         </label>
 
-        <button type="submit">Salvar</button>
+        <button type="submit">Salvar CSS Customizado</button>
     </form>
 </section>
 
@@ -19,8 +74,41 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
 <script>
     var editor = CodeMirror.fromTextArea(document.getElementById('theme'), {
-
+        mode: 'css',
+        theme: 'dracula',
+        lineNumbers: true
     });
+
+    function visualizarTema(cssPath) {
+        const blogUrl = window.location.origin + '/@/{{.subdomain}}?css=' + encodeURIComponent(cssPath);
+        window.open(blogUrl, '_blank');
+    }
+
+    function aplicarTema(themeName) {
+        if (!confirm('Deseja aplicar o tema "' + themeName + '"?')) {
+            return;
+        }
+
+        fetch('/admin/{{.subdomain}}/tema/aplicar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'theme_path=' + encodeURIComponent(themeName)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Erro: ' + data.error);
+            } else {
+                alert('Tema aplicado com sucesso!');
+                location.reload();
+            }
+        })
+        .catch(error => {
+            alert('Erro ao aplicar tema: ' + error);
+        });
+    }
 </script>
 
 {{ template "admin_footer.html" .}}

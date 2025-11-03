@@ -3,11 +3,14 @@
     <h2>Páginas</h2>
     <a href="/admin/{{.subdomain}}/page/novo">Nova Página</a>
 </header>
+
 <dl>
     {{ range .pages }}
 
-        <dt>{{ .CreatedAt.Format "02/01/2006" }} <a href="/@/{{$.subdomain}}/{{ .Slug }}">{{ .Title }}</a></dt>
-        <dd>[{{ if .Draft }}Rascunho{{ else }}Publicado{{ end }}] <a href="/admin/{{$.subdomain}}/page/{{ .ID }}">[editar]</a> . <a href="#" onclick="deletePage({{ .ID }}); return false;">[deletar]</a></dd>
+        <dt>{{ .CreatedAt.Format "02/01/2006" }}  <a href="/admin/{{$.subdomain}}/page/{{ .ID }}>">{{ .Title }}</a></dt>
+        <dd>
+            <small class="muted">{{ domain }}/@/{{$.subdomain}}/p/{{ .Slug }}</small><br>
+        </dd>
 
     {{ end }}
 </dl>

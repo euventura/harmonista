@@ -13,6 +13,9 @@
         <strong>Criado em:</strong> {{.page.CreatedAt.Format "02/01/2006 15:04"}} |
         <strong>Atualizado em:</strong> {{.page.UpdatedAt.Format "02/01/2006 15:04"}}
     </small>
+    <p>
+        <strong>URL:</strong> <a href="{{ domain }}/@/{{.subdomain}}/p/{{.page.Slug}}" target="_blank">{{ domain }}/@/{{.subdomain}}/p/{{.page.Slug}}</a>
+    </p>
 </section>
 
 <form action="/admin/{{.subdomain}}/page/{{.page.ID}}" method="POST">

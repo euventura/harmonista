@@ -1,52 +1,54 @@
 {{ template "admin_header.html" .}}
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.css">
-
-<header>
-    <h2>Editar Post</h2>
-</header>
-
-{{if .post}}
 <section>
-    <small>
-        <strong>ID:</strong> {{.post.ID}} |
-        <strong>Criado em:</strong> {{.post.CreatedAt.Format "02/01/2006 15:04"}} |
-        <strong>Atualizado em:</strong> {{.post.UpdatedAt.Format "02/01/2006 15:04"}}
-    </small>
-</section>
+    <header>
+        <h2>Editar Post</h2>
+    </header>
 
-<form action="/admin/{{.subdomain}}/post/{{.post.ID}}" method="POST">
-    <label for="title" class="width">
-        Título
-        <input type="text" id="title" name="title" value="{{.post.Title}}" required>
-    </label>
+    {{if .post}}
+    <section>
+        {{ domain }}/@/{{$.subdomain}}/{{ .Slug }} <br/>
+        <small>
+            <strong>ID:</strong> {{.post.ID}} |
+            <strong>Criado em:</strong> {{.post.CreatedAt.Format "02/01/2006 15:04"}} |
+            <strong>Atualizado em:</strong> {{.post.UpdatedAt.Format "02/01/2006 15:04"}}
 
-    <label for="category" class="width">
-        Tags
-        <input type="text" id="tags" name="tags">
-    </label>
+        </small>
+    </section>
 
-    <label for="txt_content" class="width">
-        Conteúdo (Markdown)
+    <form action="/admin/{{.subdomain}}/post/{{.post.ID}}" method="POST">
+        <label for="title" class="width">
+            Título
+            <input type="text" id="title" name="title" value="{{.post.Title}}" required>
+        </label>
+
+        <label for="category" class="width">
+            Tags
+            <input type="text" id="tags" name="tags">
+        </label>
+
+        <label for="txt_content" class="width">
+            Conteúdo (Markdown)
+        </label>
         <textarea id="txt_content" name="content" rows="20" required>{{.post.Content}}</textarea>
-    </label>
 
-    <input type="hidden" id="draft" name="draft" value="{{if .post.Draft}}true{{else}}false{{end}}">
+        <section>
+            <input type="hidden" id="draft" name="draft" value="{{if .post.Draft}}true{{else}}false{{end}}">
 
-    {{if .post.Draft}}
-        <button type="submit" name="action" value="save">Salvar</button>
-        <button type="submit" name="action" value="publish">Publicar</button>
+            {{if .post.Draft}}
+            <button type="submit" name="action" value="save">Salvar</button>
+            <button type="submit" name="action" value="publish">Publicar</button>
+            {{else}}
+            <button type="submit" name="action" value="unpublish">Despublicar</button>
+            <button type="submit" name="action" value="update">Atualizar</button>
+            {{end}}
+            <button type="button" onclick="deletePost({{.post.ID}})">Deletar</button>
+            <button type="button" onclick="window.location.href='/admin/{{.subdomain}}/posts'">Cancelar</button>
+        </section>
+    </form>
     {{else}}
-        <button type="submit" name="action" value="unpublish">Despublicar</button>
-        <button type="submit" name="action" value="update">Atualizar</button>
+    <p>Post não encontrado.</p>
     {{end}}
-    <button type="button" onclick="deletePost({{.post.ID}})">Deletar</button>
-    <button type="button" onclick="window.location.href='/admin/{{.subdomain}}/posts'">Cancelar</button>
-</form>
-{{else}}
-<p>Post não encontrado.</p>
-{{end}}
-
+</section>
 <script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
     var tinyMDE = new TinyMDE.Editor({textarea: 'txt_content'});
@@ -58,25 +60,25 @@
     const updateBtn = document.querySelector('button[value="update"]');
 
     if (saveBtn) {
-        saveBtn.addEventListener('click', function() {
+        saveBtn.addEventListener('click', function () {
             document.getElementById('draft').value = 'true';
         });
     }
 
     if (publishBtn) {
-        publishBtn.addEventListener('click', function() {
+        publishBtn.addEventListener('click', function () {
             document.getElementById('draft').value = 'false';
         });
     }
 
     if (unpublishBtn) {
-        unpublishBtn.addEventListener('click', function() {
+        unpublishBtn.addEventListener('click', function () {
             document.getElementById('draft').value = 'true';
         });
     }
 
     if (updateBtn) {
-        updateBtn.addEventListener('click', function() {
+        updateBtn.addEventListener('click', function () {
             document.getElementById('draft').value = 'false';
         });
     }
@@ -92,20 +94,20 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => {
-            if (response.ok) {
-                alert('Post deletado com sucesso!');
-                window.location.href = '/admin/' + subdomain + '/posts';
-            } else {
-                return response.json().then(data => {
-                    alert('Erro ao deletar post: ' + (data.error || 'Erro desconhecido'));
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao deletar post: ' + error);
-        });
+            .then(response => {
+                if (response.ok) {
+                    alert('Post deletado com sucesso!');
+                    window.location.href = '/admin/' + subdomain + '/posts';
+                } else {
+                    return response.json().then(data => {
+                        alert('Erro ao deletar post: ' + (data.error || 'Erro desconhecido'));
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao deletar post: ' + error);
+            });
     }
 </script>
 

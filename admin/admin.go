@@ -3,7 +3,9 @@ package admin
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -50,6 +52,8 @@ func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
 		adminGroup.POST("/page/:id", a.updatePage)
 		adminGroup.DELETE("/page/:id", a.deletePage)
 		adminGroup.GET("/tema", a.theme)
+		adminGroup.POST("/tema", a.saveTheme)
+		adminGroup.POST("/tema/aplicar", a.applyTheme)
 		adminGroup.GET("/menu", a.menu)
 		adminGroup.POST("/menu", a.updateMenu)
 		adminGroup.GET("/config", a.config)
@@ -251,12 +255,91 @@ func (a *AdminModule) dashboard(c *gin.Context) {
 }
 
 func (a *AdminModule) theme(c *gin.Context) {
-	blogData, _ := c.Get("blog")
+	subdomain := c.Param("subdomain")
+	blogData, exists := c.Get("blog")
+	if !exists {
+		c.HTML(http.StatusNotFound, "admin_error.html", gin.H{
+			"error": "Blog não encontrado",
+		})
+		return
+	}
 	blog := blogData.(*models.Blog)
 
+	// Listar arquivos CSS da pasta /public/css/temas
+	themesDir := "./public/css/temas"
+	themes := []string{}
+
+	files, err := ioutil.ReadDir(themesDir)
+	if err == nil {
+		for _, file := range files {
+			if !file.IsDir() && filepath.Ext(file.Name()) == ".css" {
+				themes = append(themes, file.Name())
+			}
+		}
+	}
+
 	c.HTML(http.StatusOK, "admin_theme.html", gin.H{
-		"blog": blog,
+		"blog":      blog,
+		"subdomain": subdomain,
+		"themes":    themes,
 	})
+}
+
+func (a *AdminModule) saveTheme(c *gin.Context) {
+	subdomain := c.Param("subdomain")
+	blogData, exists := c.Get("blog")
+	if !exists {
+		c.HTML(http.StatusNotFound, "admin_error.html", gin.H{
+			"error": "Blog não encontrado",
+		})
+		return
+	}
+	blog := blogData.(*models.Blog)
+
+	theme := c.PostForm("theme")
+	blog.Theme = theme
+
+	if err := a.db.Save(blog).Error; err != nil {
+		c.HTML(http.StatusInternalServerError, "admin_error.html", gin.H{
+			"error": "Erro ao salvar tema",
+			"blog":  blog,
+		})
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/tema")
+}
+
+func (a *AdminModule) applyTheme(c *gin.Context) {
+	blogData, exists := c.Get("blog")
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Blog não encontrado"})
+		return
+	}
+	blog := blogData.(*models.Blog)
+
+	themePath := c.PostForm("theme_path")
+	if themePath == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Caminho do tema não fornecido"})
+		return
+	}
+
+	// Ler o conteúdo do arquivo CSS
+	fullPath := filepath.Join("./public/css/temas", themePath)
+	cssContent, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao ler arquivo CSS"})
+		return
+	}
+
+	// Salvar o conteúdo em blog.Theme
+	blog.Theme = string(cssContent)
+	if err := a.db.Save(blog).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar tema"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Tema aplicado com sucesso"})
 }
 
 func (a *AdminModule) menu(c *gin.Context) {

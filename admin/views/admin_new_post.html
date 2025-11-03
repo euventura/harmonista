@@ -12,35 +12,35 @@
         <input type="text" id="title" name="title" required>
     </label>
 
-    <label for="category" class="width">
+    <label for="tags" class="width">
         Tags
         <input type="text" id="tags" name="tags">
     </label>
 
     <label for="txt_content" class="width">
-        Conteúdo (Markdown)
-        <textarea id="txt_content" name="content" rows="20" required>
+        Conteúdo (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
 
-        </textarea>
-        <a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>
     </label>
-
+    <section style="background-color: #ffffff;">
+        <textarea id="txt_content" name="content" rows="20" required> </textarea>
+    </section>
     <input type="hidden" id="draft" name="draft" value="true">
-
-    <button type="submit" name="action" value="save_draft">Salvar Rascunho</button>
-    <button type="submit" name="action" value="publish">Publicar</button>
-    <button type="button" onclick="window.location.href='/admin/{{.subdomain}}/posts'">Cancelar</button>
+    <section>
+        <button type="submit" name="action" value="save_draft">Salvar Rascunho</button>
+        <button type="submit" name="action" value="publish">Publicar</button>
+        <button type="button" onclick="window.location.href='/admin/{{.subdomain}}/posts'">Cancelar</button>
+    </section>
 </form>
 
 <script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
-    var tinyMDE = new TinyMDE.Editor({textarea: 'txt_content', content:' '});
+    var tinyMDE = new TinyMDE.Editor({textarea: 'txt_content', content: ' '});
 
-    document.querySelector('button[value="save_draft"]').addEventListener('click', function() {
+    document.querySelector('button[value="save_draft"]').addEventListener('click', function () {
         document.getElementById('draft').value = 'true';
     });
 
-    document.querySelector('button[value="publish"]').addEventListener('click', function() {
+    document.querySelector('button[value="publish"]').addEventListener('click', function () {
         document.getElementById('draft').value = 'false';
     });
 </script>

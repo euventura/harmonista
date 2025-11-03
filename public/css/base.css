@@ -1935,10 +1935,6 @@ a {
     text-decoration: inherit;
 }
 
-a:hover {
-    text-decoration: underline;
-}
-
 a:active:hover {
     color: var(--active);
 }
@@ -2183,7 +2179,6 @@ form {
     overflow: auto;
     padding: 1rem;
     border-radius: var(--bd-radius);
-    margin: 0 auto 1rem;
     background: var(--bg-muted);
 }
 
@@ -2429,14 +2424,10 @@ h3,
 h4,
 h5,
 h6 {
-    border-bottom: 1px solid transparent;
     margin: 0 0 1rem;
     line-height: 1.25;
 }
 
-:not(:is(dialog, article, body) > header:first-child) > :is(h1, h2) {
-    border-color: var(--bd-muted);
-}
 
 :not(hgroup, blockquote, header) > :is(h1, h2, h3, h4, h5, h6):first-child {
     margin-top: 1.5rem;
@@ -2795,13 +2786,17 @@ nav > ul > li:last-child::after {
 /* Sections */
 body, :host {
     max-width: var(--ct-width);
-    padding: 0 1.5rem;
+
     margin: 0 auto;
     background: var(--bg-default);
     color: var(--default);
     font-family: var(--ft);
     font-size: var(--ft-size);
     line-height: 1.5;
+}
+
+body {
+    height: 100%;
 }
 
 :host {
@@ -2828,7 +2823,6 @@ footer {
 
 section {
     max-width: var(--ct-width);
-    margin: 0 auto 2rem;
 }
 
 aside {
@@ -2852,10 +2846,8 @@ article {
     flex: 1 1 0;
     flex-direction: column;
     justify-content: space-between;
-    padding: 1rem;
-    border: 1px solid var(--bd-muted);
-    border-radius: var(--bd-radius);
-    margin: 1rem;
+    padding: 1rem 0;
+
 }
 
 article > * {
@@ -2990,10 +2982,23 @@ table.center td, th {
 main {
     margin-top: 10px;
     padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
 }
 
 h1 {
     text-align: center;
+    border: none;
+}
+
+h1 a {
+    text-decoration: none;
+}
+
+h1 a:hover {
+    text-decoration: none;
 }
 
 footer {
@@ -3009,6 +3014,33 @@ h1.harmonista {
     border: none;
 }
 
+h2 {
+    text-align: left;
+}
+
 .TinyMDE{
-    height: 400px;
+    /* Permite que o editor empurre os elementos seguintes no fluxo */
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    min-height: 400px;
+    height: auto;
+}
+
+/* Garante que elementos internos do TinyMDE não sejam absolutamente posicionados
+   e respeitem a altura do container. (Os nomes de classes podem variar conforme a lib,
+   por isso usamos seletores mais genéricos com cuidado) */
+.TinyMDE * {
+    position: static;
+}
+.TinyMDE .editor, /* fallback para estruturas internas semelhantes */
+.TinyMDE [contenteditable="true"],
+.TinyMDE textarea,
+.TinyMDE .mde-container,
+.TinyMDE .mde-editor,
+.TinyMDE .mde-textarea {
+    height: auto !important;
+    min-height: inherit;
+    overflow: visible;
 }

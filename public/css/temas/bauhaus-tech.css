@@ -1,0 +1,40 @@
+body {
+  background: #fff;
+  color: #111;
+  font-family: "Montserrat", sans-serif;
+  margin: 0 auto;
+  padding: 0;
+}
+h1.blog-name {
+  background: #ff0000;
+  color: #fff !important;
+  text-align: center;
+  font-size: 3rem;
+  padding: 1rem;
+  margin: 0 auto;
+}
+.blog-menu {
+  display: flex;
+  justify-content: space-between;
+  background: #000;
+  color: #fff;
+  padding: 0.5rem 2rem;
+}
+.blog-menu a { color: #fff; }
+.blog-post-list {
+  padding: 2rem;
+  display: grid;
+  gap: 2rem;
+}
+blockquote {
+  background: #00a0e9;
+  color: #fff;
+  padding: 1rem;
+  font-weight: bold;
+  box-shadow: 8px 8px 0 #ffde00;
+}
+footer {
+  background: #ffde00;
+  text-align: center;
+  padding: 1rem;
+}

@@ -1,0 +1,13 @@
+{{ template "blog_header.html" .}}
+
+<section class="blog-post">
+
+    <header>
+        <h2>{{ .page.Title }}</h2>
+    </header>
+
+    {{ .page.Content }}
+
+</section>
+
+{{ template "blog_footer.html" .}}

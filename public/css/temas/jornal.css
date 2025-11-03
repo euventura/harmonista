@@ -1,0 +1,39 @@
+body {
+  background: #f4f1ea;
+  color: #1c1a10;
+  font-family: "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.8;
+  max-width: 820px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+h1.blog-name {
+  font-size: 3rem;
+  text-align: center;
+  border-bottom: 4px double #111;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+header .blog-menu {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-family: "Garamond", serif;
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+.blog-description p { font-size: 1.1rem; }
+.post-list-item { border-bottom: 1px solid #aaa; padding: .5rem 0; }
+blockquote {
+  font-style: italic;
+  border-left: 6px solid #000;
+  padding-left: 1rem;
+  margin: 2rem 0;
+}
+footer {
+  text-align: center;
+  margin-top: 4rem;
+  border-top: 2px solid #111;
+  padding-top: 1rem;
+}

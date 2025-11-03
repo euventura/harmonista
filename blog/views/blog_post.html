@@ -1,13 +1,17 @@
 {{ template "blog_header.html" .}}
 
-<main>
-    <article>
-        <header>
-            <h2>{{ .post.Title }}</h2>
-            <small>{{ .post.CreatedAt.Format "02/01/2006" }}</small>
-        </header>
-        {{ .post.Content }}
-    </article>
-</main>
+<section class="blog-post">
+
+    <header>
+        <h2>{{ .post.Title }}</h2>
+        <date>{{ .post.CreatedAt.Format "02/01/2006" }}</date>
+    </header>
+
+    {{ .post.Content }}
+
+    <section class="blog-post-tags">
+
+    </section>
+</section>
 
 {{ template "blog_footer.html" .}}

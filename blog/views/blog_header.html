@@ -7,43 +7,48 @@
     <meta name="keywords" content="{{ .blog.Title }}">
     <meta property="og:site_name" content="{{ .blog.Title }}">
 
-    {{ if .post }}
-    <meta name="description" content="{{ .post.PreviewContent 155 }}">
-    <meta property="og:title" content="{{ .blog.Title }}: {{ .post.Title }}">
-    <meta property="og:type" content="article">
-    <meta property="og:updated_time" content="{{ .post.UpdatedAt }}">
-    <meta property="article:published_time" content="{{ .post.CreatedAt }}">
-    <meta property="article:modified_time" content="{{ .post.UpdatedAt }}">
-    <meta property="article:tag" content="{{ .post.Category }}">
-    <title>{{ .blog.Title }}: {{ .post.Title }}</title>
-    {{ else }}
-    {{ if .blog.Description }}
-    <meta name="description" content="{{ .blog.Description }}">
-    <meta property="og:description" content="{{ .blog.Description }}">
-    {{ else }}
-    <meta name="description" content="{{ .blog.Title }} - Blog">
-    {{ end }}
+        {{ if .post }}
+        <meta name="description" content="{{ .post.Content  }}">
+        <meta property="og:title" content="{{ .blog.Title }}: {{ .post.Title }}">
+        <meta property="og:type" content="article">
+        <meta property="og:updated_time" content="{{ .post.UpdatedAt }}">
+        <meta property="article:published_time" content="{{ .post.CreatedAt }}">
+        <meta property="article:modified_time" content="{{ .post.UpdatedAt }}">
+        <meta property="article:tag" content="{{ .post.Category }}">
+        <title>{{ .blog.Title }}: {{ .post.Title }}</title>
+        {{ else }}
+            {{ if .blog.Description }}
+                <meta name="description" content="{{ .blog.Description }}">
+                <meta property="og:description" content="{{ .blog.Description }}">
+            {{ else }}
+                <meta name="description" content="{{ .blog.Title }} - Blog">
+            {{ end }}
     <title>{{ .blog.Title }}</title>
     {{ end }}
 
     <link rel="stylesheet" href="/public/css/base.css">
 
-    {{ if .blog.Theme }}
+    {{ if .previewCSS }}
+    <!-- Preview CSS from query parameter -->
+    <link rel="stylesheet" href="{{ .previewCSS }}">
+    {{ else if .blogThemeCSS }}
+    <!-- Custom theme from database -->
     <style>
-        {{ .blog.Theme }}
+        {{ .blogThemeCSS }}
     </style>
     {{ end }}
 </head>
 <body>
 <main>
     <header>
-        <h1>{{ .blog.Title }}</h1>
-    {{ if .blog.Description }}
+        <a href="/@/{{ .blog.Subdomain }}"><h1 class="blog-name">{{ .blog.Title }}</h1></a>
 
-        <article>
-            {{ .blog.Description }}
-        </article>
+        {{ if .navLinks }}
+        <menu class="blog-menu">
+        {{ range .navLinks }}
+            <li><a href="{{ .URL }}">{{ .Text }}</a></li>
+        {{ end }}
+        </menu>
+        {{ end }}
 
-    {{ end }}
     </header>
-

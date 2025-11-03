@@ -46,6 +46,13 @@ func main() {
 		"now": func() time.Time {
 			return time.Now()
 		},
+		"domain": func() string {
+			d := os.Getenv("DOMAIN")
+			if d == "" {
+				return "http://localhost:8080"
+			}
+			return d
+		},
 	})
 
 	router.LoadHTMLGlob("*/views/*.html")

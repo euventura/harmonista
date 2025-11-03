@@ -1,0 +1,64 @@
+:root{
+  --bg: #ffffff;
+  --paper: #fff;
+  --ink: #111;
+  --accent: #0aa7ff; /* bright blue */
+  --muted: #555;
+  --pad: 14px;
+  --max-width: 980px;
+}
+
+/* Pixelated rendering */
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family: "Press Start 2P", "Courier New", courier, monospace;
+  margin:0 auto;padding:20px; -webkit-font-smoothing: none; image-rendering: pixelated;
+}
+main{max-width:var(--max-width);margin:0 auto}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:6px solid var(--ink)}
+.blog-name{margin:0;font-size:18px}
+.blog-name a{color:var(--ink);text-decoration:none;font-weight:700}
+
+/* Dotted box style used in NES.css docs */
+.nes-box{border:4px solid var(--ink);padding:12px;background:var(--paper);box-shadow:6px 6px 0 0 rgba(0,0,0,0.06)}
+
+/* Menu */
+.blog-menu{list-style:none;margin:0;padding:0;display:flex;gap:8px}
+.blog-menu a{display:inline-block;padding:8px 10px;border:3px solid var(--ink);background:#fff;color:var(--ink);text-decoration:none;font-weight:700}
+.blog-menu a:hover{background:var(--accent);color:#fff}
+
+/* Post list / index */
+.blog-post-list{padding:var(--pad) 0}
+.blog-description{margin-bottom:16px;padding:12px;border:4px dotted var(--ink);background:var(--paper)}
+.post-list{list-style:none;margin:0;padding:0}
+.post-list-item{padding:10px;border-bottom:2px dashed rgba(0,0,0,0.08);display:flex;gap:12px;align-items:center}
+.post-list-item .date{font-size:12px;color:var(--muted);min-width:88px}
+.post-list-item .item-link{font-size:14px;font-weight:700;color:var(--ink);text-decoration:none;padding-bottom:2px}
+.post-list-item .item-link:hover{color:var(--accent)}
+
+.blog-empty{padding:16px;border:3px solid var(--ink);background:#fff;text-align:center}
+
+/* Single post */
+.blog-post{padding:var(--pad) 0}
+.blog-post header h2{margin:0 0 6px;font-size:20px}
+.blog-post date{display:block;color:var(--muted);font-size:12px;margin-bottom:12px}
+.blog-post p, .blog-post ul, .blog-post ol{line-height:1.6;color:var(--ink);font-size:13px}
+
+/* Buttons (simple NES-like) */
+.btn-nes{display:inline-block;padding:8px 12px;border:4px solid var(--ink);background:#fff;color:var(--ink);font-weight:700;text-decoration:none}
+.btn-nes.primary{background:var(--accent);color:#fff}
+
+/* Footer */
+footer{margin-top:28px;padding-top:18px;border-top:6px solid var(--ink);text-align:center}
+footer a{color:var(--ink);text-decoration:none}
+footer small{color:var(--muted)}
+
+/* Small screens */
+@media (max-width:520px){
+  .blog-name{font-size:16px}
+  .post-list-item .item-link{font-size:13px}
+}
+

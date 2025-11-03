@@ -1,0 +1,44 @@
+body {
+  background: #fffcf2;
+  color: #000;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  margin: 0 auto;
+  padding: 0;
+}
+main {
+  display: grid;
+  grid-template-columns: 1fr min(800px, 90%) 1fr;
+}
+h1.blog-name {
+  background: #00ff90;
+  text-align: center;
+  padding: 1rem;
+  font-size: 3rem;
+  font-weight: 900;
+  box-shadow: 5px 5px 0 #000;
+  margin: 2rem 0;
+}
+.blog-menu {
+  display: flex;
+  justify-content: space-around;
+  background: #000;
+  padding: 1rem;
+}
+.blog-menu a { color: #fff; font-weight: 700; }
+.blog-post-list {
+  background: #fff;
+  padding: 2rem;
+  box-shadow: 8px 8px 0 #000;
+}
+blockquote {
+  background: #ffde00;
+  padding: 1rem;
+  box-shadow: 4px 4px 0 #000;
+}
+footer {
+  background: #00ff90;
+  text-align: center;
+  padding: 1rem;
+  box-shadow: 0 -4px 0 #000;
+}

@@ -1,0 +1,30 @@
+body {
+  background: #0a0a0f;
+  color: #e6e6ff;
+  font-family: "Orbitron", sans-serif;
+  letter-spacing: 0.05em;
+  padding: 2rem;
+}
+h1.blog-name {
+  font-size: 2.5rem;
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.blog-menu {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+.blog-menu a { color: #f0f; font-weight: 600; text-shadow: 0 0 5px #f0f; }
+.blog-post-list { display: grid; gap: 1.5rem; }
+.blog-description p { color: #ccc; line-height: 1.6; }
+blockquote {
+  background: rgba(255,255,255,0.05);
+  border-left: 4px solid #0ff;
+  color: #0ff;
+  font-style: italic;
+  padding: 1rem;
+}
+footer { color: #888; text-align: center; margin-top: 3rem; }

@@ -12,7 +12,10 @@ require (
 	gorm.io/gorm v1.31.0
 )
 
-require golang.org/x/crypto v0.40.0
+require (
+	github.com/yuin/goldmark v1.7.13
+	golang.org/x/crypto v0.40.0
+)
 
 require (
 	github.com/bytedance/sonic v1.14.0 // indirect

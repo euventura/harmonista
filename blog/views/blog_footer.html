@@ -1,7 +1,32 @@
-<footer class="centered">
-    &copy; <a href="https://harmonista.blog"><small>ᒡ◯ᵔ◯ᒢ Harmonista</small></a> <small>{{ now.Format "2006" }}</small>
-</footer>
-</main>
 
+</main>
+<footer>
+    &copy; <a href="{{ domain }}"><small>⌐◯ᵔ◯ Harmonista</small></a> <small>{{ now.Format "2006" }}</small>
+</footer>
+<script>
+
+
+    window.onload = (event) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const path = urlParams.get('css');
+        loadCss(path);
+    };
+
+
+    function loadCss(cssPath){
+        var cssId = 'myCss';  // you could encode the css path itself to generate id..
+        if (!document.getElementById(cssId))
+        {
+            var head  = document.getElementsByTagName('head')[0];
+            var link  = document.createElement('link');
+            link.id   = cssId;
+            link.rel  = 'stylesheet';
+            link.type = 'text/css';
+            link.href = cssPath;
+            link.media = 'all';
+            head.appendChild(link);
+        }
+    }
+</script>
 </body>
 </html>
