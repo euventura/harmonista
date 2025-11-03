@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 
@@ -63,7 +64,35 @@ func parseNavLinks(navString string) []NavLink {
 	return navLinks
 }
 
+// buildBlogURL constructs the correct URL for a blog based on subdomain settings
+func buildBlogURL(c *gin.Context, blog *models.Blog, path string) string {
+	domain := os.Getenv("DOMAIN")
+	if domain == "" {
+		domain = "http://localhost"
+	}
+	
+	// Remove trailing slash
+	domain = strings.TrimSuffix(domain, "/")
+	
+	// Check if this is a subdomain request
+	isSubdomain, exists := c.Get("is_subdomain_request")
+	if exists && isSubdomain.(bool) {
+		// For subdomain requests, use subdomain.domain format
+		baseDomain := strings.TrimPrefix(domain, "http://")
+		baseDomain = strings.TrimPrefix(baseDomain, "https://")
+		protocol := "http://"
+		if strings.HasPrefix(domain, "https://") {
+			protocol = "https://"
+		}
+		return protocol + blog.Subdomain + "." + baseDomain + path
+	}
+	
+	// For regular requests, use /@/subdomain format
+	return domain + "/@/" + blog.Subdomain + path
+}
+
 func (b *BlogModule) RegisterRoutes(router *gin.Engine) {
+	// Original routes with /@/subdomain format
 	blogGroup := router.Group("/@/:subdomain")
 	{
 		blogGroup.GET("/", b.index)
@@ -111,6 +140,9 @@ func (b *BlogModule) index(c *gin.Context) {
 	// Suporte para parâmetro ?css=<path>
 	previewCSS := c.Query("css")
 
+	// Build URLs based on request type (subdomain or /@/subdomain)
+	blogURL := buildBlogURL(c, blog, "")
+
 	c.HTML(http.StatusOK, "blog_index.html", gin.H{
 		"blog":                blog,
 		"posts":               posts,
@@ -118,6 +150,7 @@ func (b *BlogModule) index(c *gin.Context) {
 		"blogDescriptionHTML": template.HTML(renderMarkdown(blog.Description)),
 		"previewCSS":          previewCSS,
 		"blogThemeCSS":        template.CSS(blog.Theme),
+		"blogURL":             blogURL,
 	})
 }
 
@@ -166,6 +199,10 @@ func (b *BlogModule) page(c *gin.Context) {
 	// Suporte para parâmetro ?css=<path>
 	previewCSS := c.Query("css")
 
+	// Build URLs based on request type (subdomain or /@/subdomain)
+	pageURL := buildBlogURL(c, blog, "/p/"+page.Slug)
+	blogURL := buildBlogURL(c, blog, "")
+
 	c.HTML(http.StatusOK, "blog_page.html", gin.H{
 		"blog": blog,
 		"page": gin.H{
@@ -179,6 +216,8 @@ func (b *BlogModule) page(c *gin.Context) {
 		"navLinks":     navLinks,
 		"previewCSS":   previewCSS,
 		"blogThemeCSS": template.CSS(blog.Theme),
+		"pageURL":      pageURL,
+		"blogURL":      blogURL,
 	})
 }
 
@@ -262,6 +301,10 @@ func (b *BlogModule) post(c *gin.Context) {
 	// Suporte para parâmetro ?css=<path>
 	previewCSS := c.Query("css")
 
+	// Build URLs based on request type (subdomain or /@/subdomain)
+	postURL := buildBlogURL(c, blog, "/"+post.Slug)
+	blogURL := buildBlogURL(c, blog, "")
+
 	c.HTML(http.StatusOK, "blog_post.html", gin.H{
 		"blog": blog,
 		"post": gin.H{
@@ -276,6 +319,8 @@ func (b *BlogModule) post(c *gin.Context) {
 		"navLinks":     navLinks,
 		"previewCSS":   previewCSS,
 		"blogThemeCSS": template.CSS(blog.Theme),
+		"postURL":      postURL,
+		"blogURL":      blogURL,
 	})
 }
 

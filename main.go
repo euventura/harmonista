@@ -62,6 +62,9 @@ func main() {
 
 	router.Use(sessions.Sessions("harmonista-session", store))
 
+	// Add subdomain middleware
+	router.Use(common.SubdomainMiddleware())
+
 	router.SetFuncMap(map[string]interface{}{
 		"now": func() time.Time {
 			return time.Now()

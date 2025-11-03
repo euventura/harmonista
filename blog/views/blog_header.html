@@ -14,7 +14,7 @@
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="article">
-        <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
+        <meta property="og:url" content="{{ .postURL }}">
         <meta property="og:title" content="{{ .post.Title }} - {{ .blog.Title }}">
         <meta property="og:description" content="{{ printf "%.*s" 160  .post.Content }}">
         <meta property="og:site_name" content="{{ .blog.Title }}">
@@ -26,12 +26,12 @@
         
         <!-- Twitter -->
         <meta property="twitter:card" content="summary">
-        <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
+        <meta property="twitter:url" content="{{ .postURL }}">
         <meta property="twitter:title" content="{{ .post.Title }} - {{ .blog.Title }}">
         <meta property="twitter:description" content="{{ printf "%.*s" 160  .post.Content }}">
         
         <!-- Additional SEO -->
-        <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
+        <link rel="canonical" href="{{ .postURL }}">
         
         <title>{{ .post.Title }} - {{ .blog.Title }}</title>
     {{ else if .page }}
@@ -41,20 +41,20 @@
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
-        <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
+        <meta property="og:url" content="{{ .pageURL }}">
         <meta property="og:title" content="{{ .page.Title }} - {{ .blog.Title }}">
-        <meta property="og:description" content="{{ printf "%.*s" 160  .post.Content }}">
+        <meta property="og:description" content="{{ printf "%.*s" 160  .page.Content }}">
         <meta property="og:site_name" content="{{ .blog.Title }}">
         <meta property="og:locale" content="pt_BR">
         
         <!-- Twitter -->
         <meta property="twitter:card" content="summary">
-        <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
+        <meta property="twitter:url" content="{{ .pageURL }}">
         <meta property="twitter:title" content="{{ .page.Title }} - {{ .blog.Title }}">
-        <meta property="twitter:description" content="{{ printf "%.*s" 160  .post.Content }}">
+        <meta property="twitter:description" content="{{ printf "%.*s" 160  .page.Content }}">
         
         <!-- Additional SEO -->
-        <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
+        <link rel="canonical" href="{{ .pageURL }}">
         
         <title>{{ .page.Title }} - {{ .blog.Title }}</title>
     {{ else }}
@@ -72,18 +72,18 @@
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
-        <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}">
+        <meta property="og:url" content="{{ .blogURL }}">
         <meta property="og:title" content="{{ .blog.Title }}">
         <meta property="og:site_name" content="{{ .blog.Title }}">
         <meta property="og:locale" content="pt_BR">
         
         <!-- Twitter -->
         <meta property="twitter:card" content="summary">
-        <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}">
+        <meta property="twitter:url" content="{{ .blogURL }}">
         <meta property="twitter:title" content="{{ .blog.Title }}">
         
         <!-- Additional SEO -->
-        <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}">
+        <link rel="canonical" href="{{ .blogURL }}">
         
         <title>{{ .blog.Title }}</title>
     {{ end }}
