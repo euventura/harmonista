@@ -8,38 +8,33 @@
 </div>
 {{end}}
 
-<form action="/admin/cadastro" method="POST">
-    <label for="email">
-        Email *
+<form action="/cadastro" method="POST">
+    <label for="email" class="width">
+        Email
         <input type="email" id="email" name="email" required>
     </label>
 
-    <label for="password">
-        Senha *
+    <label for="password" class="width">
+        Senha
         <input type="password" id="password" name="password" required minlength="6">
     </label>
 
-    <label for="subdomain">
-        Subdomínio do Blog *
+    <label for="subdomain" class="width">
+        Subdomínio do Blog
         <input type="text" id="subdomain" name="subdomain" required pattern="[a-z0-9-]+" placeholder="meublog">
-        <small>Apenas letras minúsculas, números e hífens</small>
+        <small>.harmonista.org</small>
     </label>
 
-    <label for="title">
-        Título do Blog *
+    <label for="title" class="width">
+        Título do Blog
         <input type="text" id="title" name="title" required placeholder="Meu Blog Incrível">
-    </label>
-
-    <label for="description">
-        Descrição do Blog
-        <textarea id="description" name="description" rows="5" placeholder="Sobre o que é seu blog..."></textarea>
     </label>
 
     <button type="submit">Criar Conta e Blog</button>
 </form>
 
 <p>
-    Já tem uma conta? <a href="/admin/login">Faça login aqui</a>
+    Já tem uma conta? <a href="/login">Faça login aqui</a>
 </p>
 
 {{ template "admin_footer.html" .}}

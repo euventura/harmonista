@@ -1,0 +1,33 @@
+{{ template "blog_header.html" .}}
+
+<section class="list-reader">
+    <article class="list-reader-description">
+        <h3>Tag: {{ .tag.Title }}</h3>
+        <p>Leia o que estamos escrevendo sobre {{ .tag.Title }}</p>
+    </article>
+
+    <article class="lists">
+        {{ if .posts }}
+        <ul class="post-list">
+            {{ range .posts }}
+            <li class="post-list-item">
+                <small class="date">{{ .CreatedAt.Format "02/01/2006" }}</small>
+                <a class="item-link" href="/@/{{ .BlogSubdomain }}/{{ .Slug }}">{{ .Title }}</a>
+                <small class="blog-info">{{ $.domain }}/@/{{ .BlogSubdomain }}
+                {{ range .Tags }}
+                <a href="/leia/{{ .Title }}">#{{ .Title }}</a>
+                {{ end }}
+                </small>
+            </li>
+            {{ end }}
+        </ul>
+        {{ else }}
+        <div class="blog-empty">
+            <p>Nenhum post ainda</p>
+            <p>Sem publicações públicas com a tag "{{ $.tag.Title }}"</p>
+        </div>
+        {{ end }}
+    </article>
+</section>
+
+{{ template "blog_footer.html" .}}

@@ -2429,16 +2429,12 @@ h6 {
 }
 
 
-:not(hgroup, blockquote, header) > :is(h1, h2, h3, h4, h5, h6):first-child {
-    margin-top: 1.5rem;
-}
-
 :is(h1, h2, h3, h4, h5, h6):last-child {
     margin-bottom: 0;
 }
 
 h1 {
-    font-size: 2rem;
+    font-size: 25px;
 }
 
 h2 {
@@ -2980,8 +2976,7 @@ table.center td, th {
 }
 
 main {
-    margin-top: 10px;
-    padding-top: 30px;
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -3002,7 +2997,7 @@ h1 a:hover {
 }
 
 footer {
-    position: absolute;
+
     display: block;
     width: 100%;
     max-width: var(--ct-width);
@@ -3010,7 +3005,7 @@ footer {
 }
 
 h1.harmonista {
-    font-size: 15px;
+    font-size: 18px;
     border: none;
 }
 
@@ -3043,4 +3038,8 @@ h2 {
     height: auto !important;
     min-height: inherit;
     overflow: visible;
+}
+
+.blog-info {
+
 }

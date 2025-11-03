@@ -1,0 +1,27 @@
+{{ template "blog_header.html" .}}
+
+<section class="blog-post-list">
+    <article class="blog-tag-header">
+        <h2> Tag: {{ .tag.Title }}</h2>
+    </article>
+
+    <article class="blog-posts">
+        {{ if .posts }}
+        <ul class="post-list">
+            {{ range .posts }}
+            <li class="post-list-item">
+                <small class="date">{{ .CreatedAt.Format "02/01/2006" }}</small>
+                <a class="item-link" href="/@/{{ $.blog.Subdomain }}/{{ .Slug }}">{{ .Title }}</a>
+            </li>
+            {{ end }}
+        </ul>
+        {{ else }}
+        <div class="blog-empty">
+            <p>Nenhum post com essa tag</p>
+            <p>Este blog ainda não possui posts publicados com a tag "{{ .tag.Title }}".</p>
+        </div>
+        {{ end }}
+    </article>
+</section>
+
+{{ template "blog_footer.html" .}}

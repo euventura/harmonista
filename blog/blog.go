@@ -68,6 +68,7 @@ func (b *BlogModule) RegisterRoutes(router *gin.Engine) {
 	{
 		blogGroup.GET("/", b.index)
 		blogGroup.GET("/p/:pageSlug", b.page)
+		blogGroup.GET("/t/:tagName", b.tag)
 		blogGroup.GET("/:postSlug", b.post)
 	}
 }
@@ -181,6 +182,51 @@ func (b *BlogModule) page(c *gin.Context) {
 	})
 }
 
+func (b *BlogModule) tag(c *gin.Context) {
+	subdomain := c.Param("subdomain")
+	tagName := c.Param("tagName")
+
+	blog, err := b.getBlogBySubdomain(subdomain)
+	if err != nil {
+		c.HTML(http.StatusNotFound, "blog_error.html", gin.H{
+			"error": "Blog não encontrado",
+		})
+		return
+	}
+
+	// Buscar a tag pelo nome
+	var tag models.Tag
+	if err := b.db.Where("title = ?", tagName).First(&tag).Error; err != nil {
+		c.HTML(http.StatusNotFound, "blog_error.html", gin.H{
+			"error": "Tag não encontrada",
+		})
+		return
+	}
+
+	// Buscar posts com essa tag
+	var posts []models.Post
+	b.db.Table("posts").
+		Joins("INNER JOIN post_tags ON posts.id = post_tags.post_id").
+		Where("post_tags.tag_id = ? AND posts.blog_id = ? AND posts.draft = ?", tag.ID, blog.ID, false).
+		Order("posts.created_at DESC").
+		Find(&posts)
+
+	navLinks := parseNavLinks(blog.Nav)
+
+	// Suporte para parâmetro ?css=<path>
+	previewCSS := c.Query("css")
+
+	c.HTML(http.StatusOK, "blog_tag.html", gin.H{
+		"blog":                blog,
+		"tag":                 tag,
+		"posts":               posts,
+		"navLinks":            navLinks,
+		"blogDescriptionHTML": template.HTML(renderMarkdown(blog.Description)),
+		"previewCSS":          previewCSS,
+		"blogThemeCSS":        template.CSS(blog.Theme),
+	})
+}
+
 func (b *BlogModule) post(c *gin.Context) {
 	subdomain := c.Param("subdomain")
 	postSlug := c.Param("postSlug")
@@ -202,6 +248,13 @@ func (b *BlogModule) post(c *gin.Context) {
 		return
 	}
 
+	// Buscar tags do post
+	var tags []models.Tag
+	b.db.Table("tags").
+		Joins("INNER JOIN post_tags ON tags.id = post_tags.tag_id").
+		Where("post_tags.post_id = ?", post.ID).
+		Find(&tags)
+
 	contentHTML := template.HTML(renderMarkdown(post.Content))
 
 	navLinks := parseNavLinks(blog.Nav)
@@ -219,6 +272,7 @@ func (b *BlogModule) post(c *gin.Context) {
 			"CreatedAt": post.CreatedAt,
 			"UpdatedAt": post.UpdatedAt,
 		},
+		"tags":         tags,
 		"navLinks":     navLinks,
 		"previewCSS":   previewCSS,
 		"blogThemeCSS": template.CSS(blog.Theme),

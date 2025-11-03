@@ -1,0 +1,36 @@
+{{ template "site_header.html" .}}
+
+<section class="list-reader">
+
+    <article class="list-reader-description">
+        Leia o que estamos escrevendo
+    </article>
+
+    <article class="lists">
+        {{ if .posts }}
+        <dl class="post-list">
+            {{ range .posts }}
+            <dt class="post-list-item">
+                <small class="date">{{ .CreatedAt.Format "02/01/2006" }}</small>
+                <a class="item-link" href="/@/{{ .BlogSubdomain }}/{{ .Slug }}">{{ .Title }}</a>
+
+            </dt>
+            <dd>
+                <small class="muted">{{ $.domain }}/@/{{ .BlogSubdomain }}
+                    {{ range .Tags }}
+                    / <a href="/leia/{{ .Title }}">#{{ .Title }}</a>
+                    {{ end }}
+                </small>
+            </dd>
+            {{ end }}
+        </dl>
+        {{ else }}
+        <div class="blog-empty">
+            <p>Nenhum post ainda</p>
+            <p>Sem publicações públicas</p>
+        </div>
+        {{ end }}
+    </article>
+</section>
+
+{{ template "site_footer.html" .}}

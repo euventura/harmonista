@@ -1,0 +1,21 @@
+{{ template "admin_header.html" .}}
+
+<h2>Cadastro realizado com sucesso!</h2>
+
+{{ if .emailError }}
+<div class="error">
+    <p><strong>Atenção:</strong> {{ .emailError }}</p>
+</div>
+{{ else }}
+<div class="success">
+    <p>Um email de confirmação foi enviado para <strong>{{ .email }}</strong></p>
+    <p>Por favor, verifique sua caixa de entrada e clique no link de confirmação para ativar sua conta.</p>
+    <p>Não esqueça de verificar a pasta de spam caso não encontre o email.</p>
+</div>
+{{ end }}
+
+<p>
+    <a href="/login">Voltar para o login</a>
+</p>
+
+{{ template "admin_footer.html" .}}

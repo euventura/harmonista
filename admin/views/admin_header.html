@@ -15,10 +15,12 @@
         <h1 class="harmonista">⌐◯ᵔ◯ Harmonista</h1>
     </header>
     <section>
+        {{ if .blog.Subdomain }}
         <small><a href="{{ domain }}/@/{{ .blog.Subdomain }}/" target="_blank">{{ domain }}/@/{{ .blog.Subdomain }}/</a></small>
         <h2>{{ .blog.Title }}</h2>
-
+        {{ end }}
 
     </section>
-
+    {{ if .blog.Subdomain }}
     {{ template "admin_menu.html" .}}
+    {{ end }}

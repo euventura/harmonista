@@ -28,7 +28,7 @@ func TestAdminRoot_NotLoggedIn(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusFound, w.Code)
-	assert.Contains(t, w.Header().Get("Location"), "/admin/login")
+	assert.Contains(t, w.Header().Get("Location"), "/login")
 }
 
 func TestUserCreation(t *testing.T) {

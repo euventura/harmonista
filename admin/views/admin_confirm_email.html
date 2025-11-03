@@ -1,0 +1,23 @@
+{{ template "admin_header.html" .}}
+
+<h2>Confirmação de Email</h2>
+
+{{ if .success }}
+<div class="success">
+    <p>{{ .message }}</p>
+</div>
+
+<p>
+    <a href="/login">Ir para o login</a>
+</p>
+{{ else }}
+<div class="error">
+    <p>{{ .message }}</p>
+</div>
+
+<p>
+    <a href="/cadastrar">Criar uma nova conta</a>
+</p>
+{{ end }}
+
+{{ template "admin_footer.html" .}}

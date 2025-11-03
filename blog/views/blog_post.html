@@ -10,7 +10,9 @@
     {{ .post.Content }}
 
     <section class="blog-post-tags">
-
+        {{ range .tags }}
+        <a href="/@/{{ $.blog.Subdomain }}/t/{{ .Title }}">{{ .Title }}</a>
+        {{ end }}
     </section>
 </section>
 

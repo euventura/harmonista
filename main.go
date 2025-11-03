@@ -13,6 +13,7 @@ import (
 	"harmonista/blog"
 	"harmonista/common"
 	"harmonista/database"
+	"harmonista/site"
 )
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 		"domain": func() string {
 			d := os.Getenv("DOMAIN")
 			if d == "" {
-				return "http://localhost:8080"
+				return "http://localhost"
 			}
 			return d
 		},
@@ -59,21 +60,18 @@ func main() {
 
 	router.Static("/public", "./public")
 
+	siteModule := site.NewSiteModule(db)
+	siteModule.RegisterRoutes(router)
+
 	adminModule := admin.NewAdminModule(db)
 	adminModule.RegisterRoutes(router)
 
 	blogModule := blog.NewBlogModule(db)
 	blogModule.RegisterRoutes(router)
 
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(200, "home.html", gin.H{
-			"title": "Harmonista - Plataforma de Blogs",
-		})
-	})
-
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "80"
 	}
 
 	log.Printf("Starting server on port %s...", port)

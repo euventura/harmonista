@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	emailpkg "harmonista/email"
 	"harmonista/models"
 )
 
@@ -28,11 +29,12 @@ func NewAdminModule(db *gorm.DB) *AdminModule {
 }
 
 func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
+	router.GET("/login", a.loginPage)
+	router.POST("/login", a.loginPost)
+	router.GET("/cadastrar", a.cadastroPage)
+	router.POST("/cadastro", a.cadastroPost)
+	router.GET("/confirmar/:token", a.confirmEmail)
 	router.GET("/admin", a.adminRoot)
-	router.GET("/admin/login", a.loginPage)
-	router.POST("/admin/login", a.loginPost)
-	router.GET("/admin/cadastro", a.cadastroPage)
-	router.POST("/admin/cadastro", a.cadastroPost)
 
 	adminGroup := router.Group("/admin/:subdomain")
 	adminGroup.Use(a.requireAuth, a.loadBlog)
@@ -70,7 +72,7 @@ func (a *AdminModule) requireAuth(c *gin.Context) {
 	userID := session.Get("user_id")
 
 	if userID == nil {
-		c.Redirect(http.StatusFound, "/admin/login")
+		c.Redirect(http.StatusFound, "/login")
 		c.Abort()
 		return
 	}
@@ -112,7 +114,7 @@ func (a *AdminModule) adminRoot(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/admin/login")
+	c.Redirect(http.StatusFound, "/login")
 }
 
 func (a *AdminModule) loginPage(c *gin.Context) {
@@ -120,7 +122,7 @@ func (a *AdminModule) loginPage(c *gin.Context) {
 	userID := session.Get("user_id")
 
 	if userID != nil {
-		c.Redirect(http.StatusFound, "/admin/login")
+		c.Redirect(http.StatusFound, "/admin/dashboard")
 		return
 	}
 
@@ -142,6 +144,13 @@ func (a *AdminModule) loginPost(c *gin.Context) {
 	if !checkPasswordHash(password, user.PasswordHash) {
 		c.HTML(http.StatusUnauthorized, "admin_login.html", gin.H{
 			"error": "Email ou senha incorretos",
+		})
+		return
+	}
+
+	if !user.EmailVerified {
+		c.HTML(http.StatusUnauthorized, "admin_login.html", gin.H{
+			"error": "Email não verificado. Por favor, verifique sua caixa de entrada e confirme seu email.",
 		})
 		return
 	}
@@ -196,9 +205,20 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 		return
 	}
 
+	// Gerar token de verificação
+	verificationToken, err := generateToken()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", gin.H{
+			"error": "Erro ao gerar token de verificação",
+		})
+		return
+	}
+
 	user := models.User{
-		Email:        email,
-		PasswordHash: passwordHash,
+		Email:                  email,
+		PasswordHash:           passwordHash,
+		EmailVerified:          false,
+		EmailVerificationToken: verificationToken,
 	}
 
 	if err := a.db.Create(&user).Error; err != nil {
@@ -223,11 +243,59 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 		return
 	}
 
-	session := sessions.Default(c)
-	session.Set("user_id", user.ID)
-	session.Save()
+	// Enviar email de verificação
+	emailService := emailpkg.NewEmailService()
+	emailErr := emailService.SendVerificationEmail(user.Email, verificationToken)
 
-	c.Redirect(http.StatusFound, "/admin/dashboard")
+	// Sempre mostra a página de sucesso, mas informa se houve erro no envio
+	if emailErr != nil {
+		c.HTML(http.StatusOK, "admin_cadastro_success.html", gin.H{
+			"email":      user.Email,
+			"emailError": "Erro ao enviar email: " + emailErr.Error() + ". Entre em contato com o suporte.",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "admin_cadastro_success.html", gin.H{
+		"email": user.Email,
+	})
+}
+
+func (a *AdminModule) confirmEmail(c *gin.Context) {
+	token := c.Param("token")
+
+	var user models.User
+	if err := a.db.Where("email_verification_token = ?", token).First(&user).Error; err != nil {
+		c.HTML(http.StatusNotFound, "admin_confirm_email.html", gin.H{
+			"success": false,
+			"message": "Token inválido ou expirado",
+		})
+		return
+	}
+
+	if user.EmailVerified {
+		c.HTML(http.StatusOK, "admin_confirm_email.html", gin.H{
+			"success": true,
+			"message": "Email já confirmado anteriormente",
+		})
+		return
+	}
+
+	user.EmailVerified = true
+	user.EmailVerificationToken = ""
+
+	if err := a.db.Save(&user).Error; err != nil {
+		c.HTML(http.StatusInternalServerError, "admin_confirm_email.html", gin.H{
+			"success": false,
+			"message": "Erro ao confirmar email",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "admin_confirm_email.html", gin.H{
+		"success": true,
+		"message": "Email confirmado com sucesso! Você já pode fazer login.",
+	})
 }
 
 func (a *AdminModule) logout(c *gin.Context) {
@@ -235,7 +303,7 @@ func (a *AdminModule) logout(c *gin.Context) {
 	session.Clear()
 	session.Save()
 
-	c.Redirect(http.StatusFound, "/admin/login")
+	c.Redirect(http.StatusFound, "/login")
 }
 
 func (a *AdminModule) dashboard(c *gin.Context) {
