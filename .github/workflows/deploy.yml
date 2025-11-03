@@ -144,6 +144,7 @@ jobs:
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
             'sudo chown -R www-data:www-data /var/www/harmonista && \
              sudo chmod +x /var/www/harmonista/harmonista && \
+             sudo setcap cap_net_bind_service=+ep /var/www/harmonista/harmonista && \
              sudo chmod 600 /var/www/harmonista/.env && \
              sudo mv /tmp/harmonista.service /etc/systemd/system/harmonista.service && \
              sudo systemctl daemon-reload && \
