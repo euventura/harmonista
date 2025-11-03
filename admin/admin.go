@@ -138,6 +138,7 @@ func (a *AdminModule) loginPost(c *gin.Context) {
 	if err := a.db.Where("email = ?", email).First(&user).Error; err != nil {
 		c.HTML(http.StatusUnauthorized, "admin_login.html", gin.H{
 			"error": "Email ou senha incorretos",
+			"email": email,
 		})
 		return
 	}
@@ -145,6 +146,7 @@ func (a *AdminModule) loginPost(c *gin.Context) {
 	if !checkPasswordHash(password, user.PasswordHash) {
 		c.HTML(http.StatusUnauthorized, "admin_login.html", gin.H{
 			"error": "Email ou senha incorretos",
+			"email": email,
 		})
 		return
 	}
@@ -152,6 +154,7 @@ func (a *AdminModule) loginPost(c *gin.Context) {
 	if !user.EmailVerified {
 		c.HTML(http.StatusUnauthorized, "admin_login.html", gin.H{
 			"error": "Email não verificado. Por favor, verifique sua caixa de entrada e confirme seu email.",
+			"email": email,
 		})
 		return
 	}
@@ -182,36 +185,40 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 	title := c.PostForm("title")
 	description := c.PostForm("description")
 
+	// Dados para reenviar em caso de erro (não incluir senha por segurança)
+	formData := gin.H{
+		"email":       email,
+		"subdomain":   subdomain,
+		"title":       title,
+		"description": description,
+	}
+
 	var existingUser models.User
 	if err := a.db.Where("email = ?", email).First(&existingUser).Error; err == nil {
-		c.HTML(http.StatusBadRequest, "admin_cadastro.html", gin.H{
-			"error": "Este email já está cadastrado",
-		})
+		formData["error"] = "Este email já está cadastrado"
+		c.HTML(http.StatusBadRequest, "admin_cadastro.html", formData)
 		return
 	}
 
 	var existingBlog models.Blog
 	if err := a.db.Where("subdomain = ?", subdomain).First(&existingBlog).Error; err == nil {
-		c.HTML(http.StatusBadRequest, "admin_cadastro.html", gin.H{
-			"error": "Este subdomínio já está em uso",
-		})
+		formData["error"] = "Este subdomínio já está em uso"
+		c.HTML(http.StatusBadRequest, "admin_cadastro.html", formData)
 		return
 	}
 
 	passwordHash, err := hashPassword(password)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", gin.H{
-			"error": "Erro ao criar conta",
-		})
+		formData["error"] = "Erro ao criar conta"
+		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", formData)
 		return
 	}
 
 	// Gerar token de verificação
 	verificationToken, err := generateToken()
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", gin.H{
-			"error": "Erro ao gerar token de verificação",
-		})
+		formData["error"] = "Erro ao gerar token de verificação"
+		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", formData)
 		return
 	}
 
@@ -223,9 +230,8 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 	}
 
 	if err := a.db.Create(&user).Error; err != nil {
-		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", gin.H{
-			"error": "Erro ao criar conta",
-		})
+		formData["error"] = "Erro ao criar conta"
+		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", formData)
 		return
 	}
 
@@ -238,9 +244,8 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 
 	if err := a.db.Create(&blog).Error; err != nil {
 		a.db.Delete(&user)
-		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", gin.H{
-			"error": "Erro ao criar blog",
-		})
+		formData["error"] = "Erro ao criar blog"
+		c.HTML(http.StatusInternalServerError, "admin_cadastro.html", formData)
 		return
 	}
 

@@ -186,19 +186,40 @@ curl -I https://seu-dominio.com
 
 ## 🐛 Solução de Problemas
 
-### Serviço não inicia
+### Serviço não inicia (exit code 1)
+
+O erro mais comum é falta de arquivos ou diretórios necessários:
 
 ```bash
 # Ver logs detalhados
 sudo journalctl -u harmonista -xe
 
+# Verificar estrutura de diretórios
+cd /var/www/harmonista
+ls -la
+find . -type d
+
+# Verificar se todos os diretórios existem
+ls -la admin/views/
+ls -la site/views/
+ls -la blog/views/
+ls -la public/
+
 # Verificar permissões
 ls -la /var/www/harmonista/
 
-# Testar binário manualmente
+# Testar binário manualmente para ver o erro
 cd /var/www/harmonista
 sudo -u www-data ./harmonista
 ```
+
+**Estrutura mínima necessária:**
+- `/var/www/harmonista/harmonista` (binário)
+- `/var/www/harmonista/.env` (configuração)
+- `/var/www/harmonista/admin/views/` (templates admin)
+- `/var/www/harmonista/site/views/` (templates site)
+- `/var/www/harmonista/blog/views/` (templates blog)
+- `/var/www/harmonista/public/` (arquivos estáticos)
 
 ### Erro de permissão no .env
 

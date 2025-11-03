@@ -3,23 +3,23 @@
 <h2>Login</h2>
 
 {{if .error}}
-<div class="error">
+<div class="danger">
     <p>{{ .error }}</p>
 </div>
 {{end}}
 
 <form action="/login" method="POST">
-    <label for="email">
+    <label for="email" class="width">
         Email
-        <input type="email" id="email" name="email" required>
+        <input type="email" id="email" name="email" value="{{ .email }}" required>
     </label>
 
-    <label for="password">
+    <label for="password" class="width">
         Senha
         <input type="password" id="password" name="password" required>
     </label>
 
-    <button type="submit">Entrar</button>
+    <button class="" type="submit">Entrar ⌐◯ᵔ◯</button>
 </form>
 
 <p>

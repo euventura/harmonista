@@ -30,15 +30,21 @@ jobs:
         run: |
           mkdir -p deploy
           cp harmonista deploy/
+          cp harmonista.service deploy/
 
-          # Copiar diretórios necessários
-          cp -r public deploy/ 2>/dev/null || true
-          cp -r admin deploy/ 2>/dev/null || true
-          cp -r site deploy/ 2>/dev/null || true
-          cp -r blog deploy/ 2>/dev/null || true
+          # Copiar diretórios necessários mantendo estrutura
+          for dir in public admin/views site/views blog/views; do
+            if [ -d "$dir" ]; then
+              echo "Copying $dir..."
+              mkdir -p "deploy/$(dirname $dir)"
+              cp -r "$dir" "deploy/$dir"
+            fi
+          done
 
-          # Copiar arquivo de serviço
-          cp harmonista.service deploy/ 2>/dev/null || true
+          # Verificar estrutura criada
+          echo "Deployment structure:"
+          ls -la deploy/
+          find deploy/ -type d
 
       - name: Deploy to server
         env:
@@ -60,17 +66,16 @@ jobs:
             "$SSH_USER@$SSH_HOST" \
             "sudo systemctl stop harmonista 2>/dev/null || true"
 
-          # Enviar binário
-          sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no \
-            deploy/harmonista "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
+          # Enviar todos os arquivos e diretórios
+          echo "Uploading application files..."
+          sshpass -p "$SSH_PASSWORD" scp -r -o StrictHostKeyChecking=no \
+            deploy/* "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
 
-          # Enviar diretórios
-          for dir in public admin site blog; do
-            if [ -d "deploy/$dir" ]; then
-              sshpass -p "$SSH_PASSWORD" scp -r -o StrictHostKeyChecking=no \
-                "deploy/$dir" "$SSH_USER@$SSH_HOST:/var/www/harmonista/" || true
-            fi
-          done
+          # Verificar estrutura no servidor
+          echo "Verifying deployment structure on server:"
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
+            "$SSH_USER@$SSH_HOST" \
+            "ls -la /var/www/harmonista/ && echo '---' && find /var/www/harmonista -type d | head -20"
 
       - name: Upload systemd service file
         env:
@@ -81,6 +86,55 @@ jobs:
           sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no \
             harmonista.service "$SSH_USER@$SSH_HOST:/tmp/harmonista.service"
 
+      - name: Verify deployment requirements
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          echo "Verifying deployment requirements..."
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" bash << 'VERIFY'
+          set -e
+
+          # Verificar .env
+          if [ ! -f /var/www/harmonista/.env ]; then
+            echo "❌ ERROR: .env file not found at /var/www/harmonista/.env"
+            echo "Please create the .env file on the server before deploying."
+            echo "See DEPLOY.md for instructions."
+            exit 1
+          else
+            echo "✅ .env file found"
+          fi
+
+          # Verificar binário
+          if [ ! -f /var/www/harmonista/harmonista ]; then
+            echo "❌ ERROR: harmonista binary not found"
+            exit 1
+          else
+            echo "✅ Binary found"
+          fi
+
+          # Verificar diretórios de views
+          for dir in admin/views site/views blog/views; do
+            if [ ! -d "/var/www/harmonista/$dir" ]; then
+              echo "❌ ERROR: Required directory not found: $dir"
+              exit 1
+            else
+              echo "✅ Directory found: $dir"
+            fi
+          done
+
+          # Verificar public
+          if [ ! -d /var/www/harmonista/public ]; then
+            echo "⚠️  WARNING: public directory not found"
+          else
+            echo "✅ Public directory found"
+          fi
+
+          echo ""
+          echo "All requirements verified successfully!"
+          VERIFY
+
       - name: Configure and start service
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -90,12 +144,38 @@ jobs:
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
             'sudo chown -R www-data:www-data /var/www/harmonista && \
              sudo chmod +x /var/www/harmonista/harmonista && \
+             sudo chmod 600 /var/www/harmonista/.env && \
              sudo mv /tmp/harmonista.service /etc/systemd/system/harmonista.service && \
              sudo systemctl daemon-reload && \
              sudo systemctl enable harmonista && \
              sudo systemctl restart harmonista && \
-             sleep 2 && \
-             sudo systemctl status harmonista --no-pager'
+             sleep 3'
+
+      - name: Check service status
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          echo "Checking service status..."
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+            'sudo systemctl status harmonista --no-pager || true'
+
+          echo ""
+          echo "Recent logs:"
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+            'sudo journalctl -u harmonista -n 50 --no-pager'
+
+          echo ""
+          echo "Checking if service is active..."
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+            'if sudo systemctl is-active --quiet harmonista; then \
+               echo "✅ Service is running successfully!"; \
+               exit 0; \
+             else \
+               echo "❌ Service failed to start. Check the logs above."; \
+               exit 1; \
+             fi'
 
       - name: Deployment complete
         run: |

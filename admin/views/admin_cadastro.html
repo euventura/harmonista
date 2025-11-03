@@ -3,7 +3,7 @@
 <h2>Cadastro</h2>
 
 {{if .error}}
-<div class="error">
+<div class="danger">
     <p>{{ .error }}</p>
 </div>
 {{end}}
@@ -11,7 +11,7 @@
 <form action="/cadastro" method="POST">
     <label for="email" class="width">
         Email
-        <input type="email" id="email" name="email" required>
+        <input type="email" id="email" name="email" value="{{ .email }}" required>
     </label>
 
     <label for="password" class="width">
@@ -21,13 +21,13 @@
 
     <label for="subdomain" class="width">
         Subdomínio do Blog
-        <input type="text" id="subdomain" name="subdomain" required pattern="[a-z0-9-]+" placeholder="meublog">
+        <input type="text" id="subdomain" name="subdomain" value="{{ .subdomain }}" required pattern="[a-z0-9-]+" placeholder="meublog">
         <small>.harmonista.org</small>
     </label>
 
     <label for="title" class="width">
         Título do Blog
-        <input type="text" id="title" name="title" required placeholder="Meu Blog Incrível">
+        <input type="text" id="title" name="title" value="{{ .title }}" required placeholder="Meu Blog Incrível">
     </label>
 
     <button type="submit">Criar Conta e Blog</button>
