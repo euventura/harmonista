@@ -1,6 +1,6 @@
 {{ template "admin_header.html" .}}
 
-<h2>Cadastro realizado com sucesso!</h2>
+<h2>Que alegria em te receber</h2>
 
 {{ if .emailError }}
 <div class="danger">
@@ -8,7 +8,9 @@
 </div>
 {{ else }}
 <div>
-    <p>Um email de confirmação foi enviado para <strong>{{ .email }}</strong></p>
+    <h4>Bem vindo amigo!</h4>
+    <p>Que você fique a vontade aqui, mas para apertar nossa mão digitalmente um e-mail foi enviado para <strong>{{ .email }}</strong></p>
+    <br>
     <p>Por favor, verifique sua caixa de entrada e clique no link de confirmação para ativar sua conta.</p>
     <p>Não esqueça de verificar a pasta de spam caso não encontre o email.</p>
 </div>

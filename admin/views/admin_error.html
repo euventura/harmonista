@@ -1,5 +1,11 @@
 {{ template "admin_header.html" .}}
-<h2>Erro</h2>
-<p>{{.error}}</p>
-<a href="javascript:history.back()">← Voltar</a>
-{{ template "admin_footer.html" .}}
+<section>
+    <h2>Ops, aconteceu alguma coisa</h2>
+    <p>O servidor está falando que o erro é:</p>
+    <p>{{.error}}</p>
+    <p>Por favor, tente novamente mais tarde.</p>
+    <p>Se você está muito, muito perdido, você pode visitar nosso artigos:</p>
+    <p><a href="/leia"></a></p>
+    <a href="javascript:history.back()">← Voltar</a>
+    {{ template "admin_footer.html" .}}
+</section>
