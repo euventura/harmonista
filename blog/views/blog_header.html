@@ -10,13 +10,13 @@
     {{ if .post }}
         <!-- Post specific meta tags -->
         <meta name="keywords" content="{{ .blog.Title }}, {{ .post.Title }}, {{ .post.Category }}">
-        <meta name="description" content="{{ .post.Content | truncate 160 }}">
+        <meta name="description" content="{{ printf "%.*s" 160  .post.Content }}">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="article">
         <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
         <meta property="og:title" content="{{ .post.Title }} - {{ .blog.Title }}">
-        <meta property="og:description" content="{{ .post.Content | truncate 160 }}">
+        <meta property="og:description" content="{{ printf "%.*s" 160  .post.Content }}">
         <meta property="og:site_name" content="{{ .blog.Title }}">
         <meta property="og:locale" content="pt_BR">
         <meta property="article:published_time" content="{{ .post.CreatedAt.Format "2006-01-02T15:04:05Z07:00" }}">
@@ -28,7 +28,7 @@
         <meta property="twitter:card" content="summary">
         <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
         <meta property="twitter:title" content="{{ .post.Title }} - {{ .blog.Title }}">
-        <meta property="twitter:description" content="{{ .post.Content | truncate 160 }}">
+        <meta property="twitter:description" content="{{ printf "%.*s" 160  .post.Content }}">
         
         <!-- Additional SEO -->
         <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}/{{ .post.Slug }}">
@@ -37,13 +37,13 @@
     {{ else if .page }}
         <!-- Page specific meta tags -->
         <meta name="keywords" content="{{ .blog.Title }}, {{ .page.Title }}">
-        <meta name="description" content="{{ .page.Content | truncate 160 }}">
+        <meta name="description" content="{{ printf "%.*s" 160  .post.Content }}">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
         <meta property="og:title" content="{{ .page.Title }} - {{ .blog.Title }}">
-        <meta property="og:description" content="{{ .page.Content | truncate 160 }}">
+        <meta property="og:description" content="{{ printf "%.*s" 160  .post.Content }}">
         <meta property="og:site_name" content="{{ .blog.Title }}">
         <meta property="og:locale" content="pt_BR">
         
@@ -51,7 +51,7 @@
         <meta property="twitter:card" content="summary">
         <meta property="twitter:url" content="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
         <meta property="twitter:title" content="{{ .page.Title }} - {{ .blog.Title }}">
-        <meta property="twitter:description" content="{{ .page.Content | truncate 160 }}">
+        <meta property="twitter:description" content="{{ printf "%.*s" 160  .post.Content }}">
         
         <!-- Additional SEO -->
         <link rel="canonical" href="{{ domain }}/@/{{ .blog.Subdomain }}/p/{{ .page.Slug }}">
