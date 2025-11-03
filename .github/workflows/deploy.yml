@@ -72,56 +72,30 @@ jobs:
             fi
           done
 
+      - name: Upload systemd service file
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no \
+            harmonista.service "$SSH_USER@$SSH_HOST:/tmp/harmonista.service"
+
       - name: Configure and start service
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
-            "$SSH_USER@$SSH_HOST" << 'ENDSSH'
-          set -e
-
-          # Configurar permissões
-          sudo chown -R www-data:www-data /var/www/harmonista
-          sudo chmod +x /var/www/harmonista/harmonista
-
-          # Criar arquivo de serviço systemd
-          sudo tee /etc/systemd/system/harmonista.service > /dev/null << 'EOF'
-[Unit]
-Description=Harmonista Web Application
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/var/www/harmonista
-Environment="PATH=/usr/local/go/bin:/usr/bin:/bin"
-EnvironmentFile=/var/www/harmonista/.env
-ExecStart=/var/www/harmonista/harmonista
-Restart=always
-RestartSec=5
-
-NoNewPrivileges=true
-PrivateTmp=true
-
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=harmonista
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-          # Recarregar e iniciar serviço
-          sudo systemctl daemon-reload
-          sudo systemctl enable harmonista
-          sudo systemctl start harmonista
-
-          # Verificar status
-          sleep 2
-          sudo systemctl status harmonista --no-pager
-ENDSSH
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+            'sudo chown -R www-data:www-data /var/www/harmonista && \
+             sudo chmod +x /var/www/harmonista/harmonista && \
+             sudo mv /tmp/harmonista.service /etc/systemd/system/harmonista.service && \
+             sudo systemctl daemon-reload && \
+             sudo systemctl enable harmonista && \
+             sudo systemctl restart harmonista && \
+             sleep 2 && \
+             sudo systemctl status harmonista --no-pager'
 
       - name: Deployment complete
         run: |
