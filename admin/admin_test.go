@@ -79,6 +79,21 @@ func TestGenerateSlug(t *testing.T) {
 		{"Multiple   Spaces", "multiple-spaces"},
 		{"Special@#Characters!", "specialcharacters"},
 		{"---Dashes---", "dashes"},
+		// Casos com caracteres acentuados português
+		{"São Paulo", "sao-paulo"},
+		{"Programação em Go", "programacao-em-go"},
+		{"Configuração do Sistema", "configuracao-do-sistema"},
+		{"Função com Acentos", "funcao-com-acentos"},
+		{"José da Silva", "jose-da-silva"},
+		{"Criação de Páginas", "criacao-de-paginas"},
+		{"Integração Avançada", "integracao-avancada"},
+		{"Soluções Técnicas", "solucoes-tecnicas"},
+		{"Português Brasileiro", "portugues-brasileiro"},
+		// Casos mistos
+		{"É uma Função!", "e-uma-funcao"},
+		{"Açúcar & Café", "acucar-cafe"},
+		{"Coração", "coracao"},
+		{"Ação Automática", "acao-automatica"},
 	}
 
 	for _, tt := range tests {

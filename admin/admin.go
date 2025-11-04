@@ -681,9 +681,6 @@ func (a *AdminModule) savePost(c *gin.Context) {
 
 // autoSavePost salva automaticamente o conteúdo de um novo post (rascunho)
 func (a *AdminModule) autoSavePost(c *gin.Context) {
-	subdomain := c.Param("subdomain")
-	blogData, _ := c.Get("blog")
-	blog := blogData.(*models.Blog)
 
 	var request struct {
 		Title   string `json:"title"`
@@ -706,7 +703,6 @@ func (a *AdminModule) autoSavePost(c *gin.Context) {
 
 // autoSaveExistingPost salva automaticamente o conteúdo de um post existente (apenas rascunhos)
 func (a *AdminModule) autoSaveExistingPost(c *gin.Context) {
-	subdomain := c.Param("subdomain")
 	postID := c.Param("id")
 	blogData, _ := c.Get("blog")
 	blog := blogData.(*models.Blog)
@@ -1192,7 +1188,39 @@ func (a *AdminModule) createOrAssignTag(blogID int, postID int, tagTitle string)
 }
 
 func generateSlug(title string) string {
+	// Mapa de caracteres acentuados para suas versões sem acento
+	accentMap := map[rune]rune{
+		'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a', 'å': 'a', 'ā': 'a',
+		'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e', 'ē': 'e',
+		'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i', 'ī': 'i',
+		'ó': 'o', 'ò': 'o', 'õ': 'o', 'ô': 'o', 'ö': 'o', 'ø': 'o', 'ō': 'o',
+		'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u', 'ū': 'u',
+		'ç': 'c', 'ć': 'c', 'č': 'c',
+		'ñ': 'n', 'ń': 'n',
+		'ý': 'y', 'ÿ': 'y',
+		'ß': 's',
+		// Versões maiúsculas também
+		'Á': 'a', 'À': 'a', 'Ã': 'a', 'Â': 'a', 'Ä': 'a', 'Å': 'a', 'Ā': 'a',
+		'É': 'e', 'È': 'e', 'Ê': 'e', 'Ë': 'e', 'Ē': 'e',
+		'Í': 'i', 'Ì': 'i', 'Î': 'i', 'Ï': 'i', 'Ī': 'i',
+		'Ó': 'o', 'Ò': 'o', 'Õ': 'o', 'Ô': 'o', 'Ö': 'o', 'Ø': 'o', 'Ō': 'o',
+		'Ú': 'u', 'Ù': 'u', 'Û': 'u', 'Ü': 'u', 'Ū': 'u',
+		'Ç': 'c', 'Ć': 'c', 'Č': 'c',
+		'Ñ': 'n', 'Ń': 'n',
+		'Ý': 'y', 'Ÿ': 'y',
+	}
+
+	// Primeiro, converter para minúsculas e remover acentos
 	slug := strings.ToLower(title)
+	slug = strings.Map(func(r rune) rune {
+		// Se encontrar um caractere acentuado no mapa, substitui
+		if replacement, exists := accentMap[r]; exists {
+			return replacement
+		}
+		return r
+	}, slug)
+
+	// Depois, manter apenas caracteres válidos para slug
 	slug = strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
 			return r
@@ -1200,9 +1228,10 @@ func generateSlug(title string) string {
 		if r == ' ' {
 			return '-'
 		}
-		return -1
+		return -1 // Remove caractere
 	}, slug)
 
+	// Limpar hífens duplos e nas bordas
 	slug = strings.Trim(slug, "-")
 	for strings.Contains(slug, "--") {
 		slug = strings.ReplaceAll(slug, "--", "-")
