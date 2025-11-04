@@ -1,6 +1,6 @@
 {{ template "admin_header.html" .}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.css">
+{{ template "tinymde_component.html" .}}
 
 <h2>Inicio</h2>
 <form action="/admin/{{.subdomain}}/inicio" method="POST">
@@ -10,21 +10,25 @@
     </label>
 
     <label for="description">
-        Página inicial
-        <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25"> </textarea>
+        Página inicial (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
+        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
+        <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25" style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> </textarea>
     </label>
 
     <button type="submit">Salvar</button>
 </form>
 
-<script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
-    var tinyMDE = new TinyMDE.Editor({textarea: 'description'});
+    // Inicializar TinyMDE sem auto-save (página inicial não é rascunho)
+    const tinyMDEManager = new TinyMDEManager({
+        textareaId: 'description',
+        autoSave: false
+    });
+
     {{if .blog}}
         {{if .blog.Description}}
-            tinyMDE.setContent('{{.blog.Description}} ');
+            tinyMDEManager.setContent('{{.blog.Description}} ');
         {{end}}
-
     {{end}}
 </script>
 

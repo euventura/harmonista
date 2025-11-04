@@ -1,6 +1,6 @@
 {{ template "admin_header.html" .}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.css">
+{{ template "tinymde_component.html" .}}
 
 <header>
     <h2>Menu de Navegação</h2>
@@ -20,17 +20,21 @@
 
 <form action="/admin/{{.subdomain}}/menu" method="POST">
     <label for="txt_nav" class="width">
-        Links de Navegação (Markdown)
-        <textarea id="txt_nav" name="nav" rows="10"> {{.blog.Nav}}</textarea>
+        Links de Navegação (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
+        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
+        <textarea id="txt_nav" name="nav" rows="10" style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> {{.blog.Nav}}</textarea>
     </label>
 
     <button type="submit">Salvar Menu</button>
     <button type="button" onclick="window.location.href='/admin/{{.subdomain}}/'">Cancelar</button>
 </form>
 
-<script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
-    var tinyMDE = new TinyMDE.Editor({textarea: 'txt_nav'});
+    // Inicializar TinyMDE sem auto-save (menu não é rascunho)
+    const tinyMDEManager = new TinyMDEManager({
+        textareaId: 'txt_nav',
+        autoSave: false
+    });
 </script>
 
 {{ template "admin_footer.html" .}}

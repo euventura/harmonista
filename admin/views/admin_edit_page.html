@@ -1,6 +1,6 @@
 {{ template "admin_header.html" .}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.css">
+{{ template "tinymde_component.html" .}}
 
 <header>
     <h2>Editar Página</h2>
@@ -25,8 +25,9 @@
     </label>
 
     <label for="txt_content" class="width">
-        Conteúdo (Markdown)
-        <textarea id="txt_content" name="content" rows="20" required> {{.page.Content}}</textarea>
+        Conteúdo (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
+        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
+        <textarea id="txt_content" name="content" rows="20" required style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> {{.page.Content}}</textarea>
     </label>
 
     <input type="hidden" id="draft" name="draft" value="{{if .page.Draft}}true{{else}}false{{end}}">
@@ -45,9 +46,16 @@
 <p>Página não encontrada.</p>
 {{end}}
 
-<script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
-    var tinyMDE = new TinyMDE.Editor({textarea: 'txt_content'});
+    // Inicializar TinyMDE com auto-save apenas se for rascunho
+    const isDraft = {{.page.Draft}};
+    const tinyMDEManager = new TinyMDEManager({
+        textareaId: 'txt_content',
+        autoSave: isDraft,
+        autoSaveUrl: '/admin/{{.subdomain}}/page/{{.page.ID}}/autosave',
+        autoSaveKey: 'edit_page_{{.page.ID}}'
+    });
+
     const subdomain = '{{.subdomain}}';
 
     const saveBtn = document.querySelector('button[value="save"]');

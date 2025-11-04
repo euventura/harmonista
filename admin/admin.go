@@ -45,14 +45,18 @@ func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
 		adminGroup.GET("/posts", a.listPosts)
 		adminGroup.GET("/post/novo", a.newPost)
 		adminGroup.POST("/post/salvar", a.savePost)
+		adminGroup.POST("/post/autosave", a.autoSavePost)
 		adminGroup.GET("/post/:id", a.editPost)
 		adminGroup.POST("/post/:id", a.updatePost)
+		adminGroup.POST("/post/:id/autosave", a.autoSaveExistingPost)
 		adminGroup.DELETE("/post/:id", a.deletePost)
 		adminGroup.GET("/pages", a.listPages)
 		adminGroup.GET("/page/novo", a.newPage)
 		adminGroup.POST("/page/salvar", a.savePage)
+		adminGroup.POST("/page/autosave", a.autoSavePage)
 		adminGroup.GET("/page/:id", a.editPage)
 		adminGroup.POST("/page/:id", a.updatePage)
+		adminGroup.POST("/page/:id/autosave", a.autoSaveExistingPage)
 		adminGroup.DELETE("/page/:id", a.deletePage)
 		adminGroup.GET("/tema", a.theme)
 		adminGroup.POST("/tema", a.saveTheme)
@@ -675,6 +679,84 @@ func (a *AdminModule) savePost(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/posts")
 }
 
+// autoSavePost salva automaticamente o conteúdo de um novo post (rascunho)
+func (a *AdminModule) autoSavePost(c *gin.Context) {
+	subdomain := c.Param("subdomain")
+	blogData, _ := c.Get("blog")
+	blog := blogData.(*models.Blog)
+
+	var request struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+		Tags    string `json:"tags"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+		return
+	}
+
+	// Para auto-save de novos posts, vamos usar um sistema simples
+	// que salva no localStorage do navegador por enquanto
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Auto-save simulado (localStorage)",
+	})
+}
+
+// autoSaveExistingPost salva automaticamente o conteúdo de um post existente (apenas rascunhos)
+func (a *AdminModule) autoSaveExistingPost(c *gin.Context) {
+	subdomain := c.Param("subdomain")
+	postID := c.Param("id")
+	blogData, _ := c.Get("blog")
+	blog := blogData.(*models.Blog)
+
+	var post models.Post
+	if err := a.db.Where("id = ? AND blog_id = ?", postID, blog.ID).First(&post).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post não encontrado"})
+		return
+	}
+
+	// Só permite auto-save em rascunhos
+	if !post.Draft {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Auto-save só é permitido em rascunhos"})
+		return
+	}
+
+	var request struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+		Tags    string `json:"tags"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+		return
+	}
+
+	// Atualiza apenas o conteúdo, mantendo como rascunho
+	updates := map[string]interface{}{
+		"content":    request.Content,
+		"updated_at": time.Now(),
+	}
+
+	if request.Title != "" {
+		updates["title"] = request.Title
+		updates["slug"] = generateSlug(request.Title)
+	}
+
+	if err := a.db.Model(&post).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar automaticamente"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Rascunho salvo automaticamente",
+		"saved_at": time.Now().Format("15:04:05"),
+	})
+}
+
 func (a *AdminModule) editPost(c *gin.Context) {
 	subdomain := c.Param("subdomain")
 	postID := c.Param("id")
@@ -840,6 +922,77 @@ func (a *AdminModule) savePage(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/pages")
+}
+
+// autoSavePage salva automaticamente o conteúdo de uma nova página (rascunho)
+func (a *AdminModule) autoSavePage(c *gin.Context) {
+	var request struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+		return
+	}
+
+	// Para auto-save de novas páginas, vamos usar um sistema simples
+	// que salva no localStorage do navegador por enquanto
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Auto-save simulado (localStorage)",
+	})
+}
+
+// autoSaveExistingPage salva automaticamente o conteúdo de uma página existente (apenas rascunhos)
+func (a *AdminModule) autoSaveExistingPage(c *gin.Context) {
+	pageID := c.Param("id")
+	blogData, _ := c.Get("blog")
+	blog := blogData.(*models.Blog)
+
+	var page models.Page
+	if err := a.db.Where("id = ? AND blog_id = ?", pageID, blog.ID).First(&page).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Página não encontrada"})
+		return
+	}
+
+	// Só permite auto-save em rascunhos
+	if !page.Draft {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Auto-save só é permitido em rascunhos"})
+		return
+	}
+
+	var request struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+		return
+	}
+
+	// Atualiza apenas o conteúdo, mantendo como rascunho
+	updates := map[string]interface{}{
+		"content":    request.Content,
+		"updated_at": time.Now(),
+	}
+
+	if request.Title != "" {
+		updates["title"] = request.Title
+		updates["slug"] = generateSlug(request.Title)
+	}
+
+	if err := a.db.Model(&page).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar automaticamente"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Rascunho salvo automaticamente",
+		"saved_at": time.Now().Format("15:04:05"),
+	})
 }
 
 func (a *AdminModule) editPage(c *gin.Context) {

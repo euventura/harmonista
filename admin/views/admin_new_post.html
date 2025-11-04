@@ -1,6 +1,6 @@
 {{ template "admin_header.html" .}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.css">
+{{ template "tinymde_component.html" .}}
 
 <header>
     <h2>Criar Novo Post</h2>
@@ -19,10 +19,10 @@
 
     <label for="txt_content" class="width">
         Conteúdo (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
-
+        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
     </label>
     <section style="background-color: #ffffff;">
-        <textarea id="txt_content" name="content" rows="20" required> </textarea>
+        <textarea id="txt_content" name="content" rows="20" required style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> </textarea>
     </section>
     <input type="hidden" id="draft" name="draft" value="true">
     <section>
@@ -32,9 +32,14 @@
     </section>
 </form>
 
-<script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
-    var tinyMDE = new TinyMDE.Editor({textarea: 'txt_content', content: ' '});
+    // Inicializar TinyMDE com auto-save habilitado (é um novo post, então é sempre rascunho)
+    const tinyMDEManager = new TinyMDEManager({
+        textareaId: 'txt_content',
+        autoSave: true,
+        autoSaveUrl: '/admin/{{.subdomain}}/post/autosave',
+        autoSaveKey: 'new_post'
+    });
 
     document.querySelector('button[value="save_draft"]').addEventListener('click', function () {
         document.getElementById('draft').value = 'true';

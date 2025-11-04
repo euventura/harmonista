@@ -1,6 +1,6 @@
 {{ template "admin_header.html" .}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.css">
+{{ template "tinymde_component.html" .}}
 
 <header>
     <h2>Criar Nova Página</h2>
@@ -13,11 +13,11 @@
     </label>
 
     <label for="txt_content" class="width">
-        Conteúdo (Markdown)
-        <textarea id="txt_content" name="content" rows="20" required>
+        Conteúdo (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
+        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
+        <textarea id="txt_content" name="content" rows="20" required style="font-family: 'Courier New', monospace; white-space: pre-wrap;">
 
         </textarea>
-        <a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>
     </label>
 
     <input type="hidden" id="draft" name="draft" value="true">
@@ -27,9 +27,14 @@
     <button type="button" onclick="window.location.href='/admin/{{.subdomain}}/pages'">Cancelar</button>
 </form>
 
-<script src="https://cdn.jsdelivr.net/npm/tiny-markdown-editor@0.1.13/dist/tiny-mde.min.js"></script>
 <script>
-    var tinyMDE = new TinyMDE.Editor({textarea: 'txt_content', content:' '});
+    // Inicializar TinyMDE com auto-save habilitado (é uma nova página, então é sempre rascunho)
+    const tinyMDEManager = new TinyMDEManager({
+        textareaId: 'txt_content',
+        autoSave: true,
+        autoSaveUrl: '/admin/{{.subdomain}}/page/autosave',
+        autoSaveKey: 'new_page'
+    });
 
     document.querySelector('button[value="save_draft"]').addEventListener('click', function() {
         document.getElementById('draft').value = 'true';
