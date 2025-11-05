@@ -20,10 +20,16 @@ jobs:
         with:
           go-version: '1.21'  # Ajuste para a versão do Go que você usa
 
+      - name: Download dependencies
+        run: |
+          echo "Downloading Go dependencies..."
+          go mod download
+          go mod verify
+
       - name: Build application
         run: |
           echo "Building Harmonista..."
-          GO111MODULE=on go build -o harmonista .
+          go build -o harmonista .
           chmod +x harmonista
 
       - name: Create deployment directory structure

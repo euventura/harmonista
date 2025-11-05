@@ -15,11 +15,13 @@ import (
 	htmlrenderer "github.com/yuin/goldmark/renderer/html"
 	"gorm.io/gorm"
 
+	"harmonista/analytics"
 	"harmonista/models"
 )
 
 type BlogModule struct {
-	db *gorm.DB
+	db        *gorm.DB
+	analytics *analytics.AnalyticsModule
 }
 
 // markdown renderer configured with Goldmark and useful extensions
@@ -38,8 +40,11 @@ type NavLink struct {
 	URL  string
 }
 
-func NewBlogModule(db *gorm.DB) *BlogModule {
-	return &BlogModule{db: db}
+func NewBlogModule(db *gorm.DB, analyticsModule *analytics.AnalyticsModule) *BlogModule {
+	return &BlogModule{
+		db:        db,
+		analytics: analyticsModule,
+	}
 }
 
 func parseNavLinks(navString string) []NavLink {
@@ -70,10 +75,10 @@ func buildBlogURL(c *gin.Context, blog *models.Blog, path string) string {
 	if domain == "" {
 		domain = "http://localhost"
 	}
-	
+
 	// Remove trailing slash
 	domain = strings.TrimSuffix(domain, "/")
-	
+
 	// Check if this is a subdomain request
 	isSubdomain, exists := c.Get("is_subdomain_request")
 	if exists && isSubdomain.(bool) {
@@ -86,7 +91,7 @@ func buildBlogURL(c *gin.Context, blog *models.Blog, path string) string {
 		}
 		return protocol + blog.Subdomain + "." + baseDomain + path
 	}
-	
+
 	// For regular requests, use /@/subdomain format
 	return domain + "/@/" + blog.Subdomain + path
 }
@@ -117,6 +122,11 @@ func (b *BlogModule) index(c *gin.Context) {
 			"error": "Blog não encontrado",
 		})
 		return
+	}
+
+	// Track visit to blog home
+	if b.analytics != nil {
+		b.analytics.TrackVisit(c, blog.ID, nil)
 	}
 
 	// Debug: verificar se o tema está sendo carregado
@@ -191,6 +201,9 @@ func (b *BlogModule) page(c *gin.Context) {
 	}
 
 	fmt.Printf("DEBUG PAGE - Página encontrada: ID=%d, Title=%s\n", page.ID, page.Title)
+
+	// Track visit to blog page (não trackeamos pages no analytics por enquanto)
+	// Pages são diferentes de Posts, e o requisito era trackear Posts
 
 	contentHTML := template.HTML(renderMarkdown(page.Content))
 
@@ -285,6 +298,12 @@ func (b *BlogModule) post(c *gin.Context) {
 			"error": "Post não encontrado",
 		})
 		return
+	}
+
+	// Track visit to specific post
+	postID := int(post.ID)
+	if b.analytics != nil {
+		b.analytics.TrackVisit(c, blog.ID, &postID)
 	}
 
 	// Buscar tags do post

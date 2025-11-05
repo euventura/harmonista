@@ -36,3 +36,25 @@ func ConnectDb() *gorm.DB {
 	return db
 
 }
+
+// ConnectAnalyticsDb conecta ao banco de dados de analytics separado
+func ConnectAnalyticsDb() *gorm.DB {
+	analyticsDbFile := os.Getenv("analytics_db")
+	log.Println("attemptConnectAnalyticsDb: analytics_db from env (raw):", analyticsDbFile)
+
+	if analyticsDbFile == "" {
+		log.Println("analytics_db not set - analytics will be disabled")
+		return nil
+	}
+
+	db, err := gorm.Open(sqlite.Open(analyticsDbFile), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
+	if err != nil {
+		log.Println("Error opening analytics sqlite db: " + err.Error())
+		return nil
+	}
+
+	log.Println("opened analytics sqlite db at:", analyticsDbFile)
+	return db
+}
