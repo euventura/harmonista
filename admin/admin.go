@@ -17,6 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"harmonista/cache"
 	emailpkg "harmonista/email"
 	"harmonista/models"
 )
@@ -386,6 +387,11 @@ func (a *AdminModule) saveTheme(c *gin.Context) {
 		return
 	}
 
+	// Invalidar todo o cache do blog (tema afeta todas as páginas)
+	if err := cache.DeleteAll(blog.Subdomain); err != nil {
+		log.Printf("Failed to invalidate blog cache: %v", err)
+	}
+
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/tema")
 }
 
@@ -416,6 +422,11 @@ func (a *AdminModule) applyTheme(c *gin.Context) {
 	if err := a.db.Save(blog).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar tema"})
 		return
+	}
+
+	// Invalidar todo o cache do blog (tema afeta todas as páginas)
+	if err := cache.DeleteAll(blog.Subdomain); err != nil {
+		log.Printf("Failed to invalidate blog cache: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Tema aplicado com sucesso"})
@@ -465,6 +476,11 @@ func (a *AdminModule) updateMenu(c *gin.Context) {
 		return
 	}
 
+	// Invalidar todo o cache do blog (menu afeta todas as páginas)
+	if err := cache.DeleteAll(blog.Subdomain); err != nil {
+		log.Printf("Failed to invalidate blog cache: %v", err)
+	}
+
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/menu")
 }
 
@@ -504,6 +520,7 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 	isListReader := c.PostForm("IsListReader") == "1"
 
 	// Validate subdomain change if different
+	oldSubdomain := blog.Subdomain
 	if newSubdomain != blog.Subdomain {
 		var existingBlog models.Blog
 		if err := a.db.Where("subdomain = ?", newSubdomain).First(&existingBlog).Error; err == nil {
@@ -526,6 +543,17 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 			"blog":  blog,
 		})
 		return
+	}
+
+	// Invalidar cache do blog antigo (se mudou subdomínio)
+	if oldSubdomain != newSubdomain {
+		if err := cache.DeleteAll(oldSubdomain); err != nil {
+			log.Printf("Failed to invalidate old blog cache: %v", err)
+		}
+	}
+	// Invalidar todo o cache do blog (configurações afetam todas as páginas)
+	if err := cache.DeleteAll(blog.Subdomain); err != nil {
+		log.Printf("Failed to invalidate blog cache: %v", err)
 	}
 
 	// Update password if provided
@@ -599,6 +627,11 @@ func (a *AdminModule) updateBlogSettings(c *gin.Context) {
 			"blog":  blog,
 		})
 		return
+	}
+
+	// Invalidar todo o cache do blog (título e descrição afetam todas as páginas)
+	if err := cache.DeleteAll(blog.Subdomain); err != nil {
+		log.Printf("Failed to invalidate blog cache: %v", err)
 	}
 
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/")
@@ -676,6 +709,13 @@ func (a *AdminModule) savePost(c *gin.Context) {
 		}
 	}
 
+	// Se publicou, invalidar cache da index
+	if !draft {
+		if err := cache.Delete(blog.Subdomain, "/"); err != nil {
+			log.Printf("Failed to invalidate index cache: %v", err)
+		}
+	}
+
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/posts")
 }
 
@@ -747,8 +787,8 @@ func (a *AdminModule) autoSaveExistingPost(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Rascunho salvo automaticamente",
+		"success":  true,
+		"message":  "Rascunho salvo automaticamente",
 		"saved_at": time.Now().Format("15:04:05"),
 	})
 }
@@ -828,6 +868,11 @@ func (a *AdminModule) updatePost(c *gin.Context) {
 		}
 	}
 
+	// Invalidar cache do post
+	if err := cache.DeletePostCache(blog.Subdomain, post.Slug); err != nil {
+		log.Printf("Failed to invalidate post cache: %v", err)
+	}
+
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/posts")
 }
 
@@ -842,6 +887,13 @@ func (a *AdminModule) deletePost(c *gin.Context) {
 		return
 	}
 
+	// Buscar o post antes de deletar para pegar o slug
+	var post models.Post
+	if err := a.db.Where("id = ? AND blog_id = ?", postIDInt, blog.ID).First(&post).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post não encontrado"})
+		return
+	}
+
 	result := a.db.Where("id = ? AND blog_id = ?", postIDInt, blog.ID).Delete(&models.Post{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao deletar post"})
@@ -851,6 +903,11 @@ func (a *AdminModule) deletePost(c *gin.Context) {
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post não encontrado"})
 		return
+	}
+
+	// Invalidar cache do post
+	if err := cache.DeletePostCache(blog.Subdomain, post.Slug); err != nil {
+		log.Printf("Failed to invalidate post cache: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Post deletado com sucesso"})
@@ -985,8 +1042,8 @@ func (a *AdminModule) autoSaveExistingPage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Rascunho salvo automaticamente",
+		"success":  true,
+		"message":  "Rascunho salvo automaticamente",
 		"saved_at": time.Now().Format("15:04:05"),
 	})
 }
@@ -1052,6 +1109,11 @@ func (a *AdminModule) updatePage(c *gin.Context) {
 		return
 	}
 
+	// Invalidar cache da página
+	if err := cache.DeletePageCache(blog.Subdomain, page.Slug); err != nil {
+		log.Printf("Failed to invalidate page cache: %v", err)
+	}
+
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/pages")
 }
 
@@ -1066,6 +1128,13 @@ func (a *AdminModule) deletePage(c *gin.Context) {
 		return
 	}
 
+	// Buscar a página antes de deletar para pegar o slug
+	var page models.Page
+	if err := a.db.Where("id = ? AND blog_id = ?", pageIDInt, blog.ID).First(&page).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Página não encontrada"})
+		return
+	}
+
 	result := a.db.Where("id = ? AND blog_id = ?", pageIDInt, blog.ID).Delete(&models.Page{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao deletar página"})
@@ -1075,6 +1144,11 @@ func (a *AdminModule) deletePage(c *gin.Context) {
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Página não encontrada"})
 		return
+	}
+
+	// Invalidar cache da página
+	if err := cache.DeletePageCache(blog.Subdomain, page.Slug); err != nil {
+		log.Printf("Failed to invalidate page cache: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Página deletada com sucesso"})

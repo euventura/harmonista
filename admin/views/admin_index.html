@@ -11,23 +11,22 @@
 
     <label for="description">
         Página inicial (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
-        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
-        <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25" style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> </textarea>
+        <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25"></textarea>
     </label>
 
     <button type="submit">Salvar</button>
 </form>
 
 <script>
-    // Inicializar TinyMDE sem auto-save (página inicial não é rascunho)
-    const tinyMDEManager = new TinyMDEManager({
+    // Inicializar EasyMDE sem auto-save (página inicial não é rascunho)
+    const easyMDEManager = new EasyMDEManager({
         textareaId: 'description',
-        autoSave: false
+        autoSaveUrl: null
     });
 
     {{if .blog}}
         {{if .blog.Description}}
-            tinyMDEManager.setContent('{{.blog.Description}} ');
+            easyMDEManager.setContent('{{.blog.Description}}');
         {{end}}
     {{end}}
 </script>
