@@ -2,8 +2,8 @@ name: Deploy to Production
 
 on:
   push:
-    branches:
-      - master  # Dispara quando houver push na branch master
+    tags:
+      - 'v*'  # Dispara quando criar tags como v1.0.0, v1.2.3, etc.
   workflow_dispatch:  # Permite execução manual pelo GitHub
 
 jobs:

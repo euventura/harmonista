@@ -31,9 +31,8 @@
 
         <label for="txt_content" class="width">
             Conteúdo (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
-            <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
+            <textarea id="txt_content" name="content" rows="20" required>{{.post.Content}}</textarea>
         </label>
-        <textarea id="txt_content" name="content" rows="20" required style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> {{.post.Content}}</textarea>
 
         <section>
             <input type="hidden" id="draft" name="draft" value="{{if .post.Draft}}true{{else}}false{{end}}">
@@ -55,13 +54,11 @@
 </section>
 
 <script>
-    // Inicializar TinyMDE com auto-save apenas se for rascunho
+    // Inicializar EasyMDE com auto-save apenas se for rascunho
     const isDraft = {{.post.Draft}};
-    const tinyMDEManager = new TinyMDEManager({
+    const easyMDEManager = new EasyMDEManager({
         textareaId: 'txt_content',
-        autoSave: isDraft,
-        autoSaveUrl: '/admin/{{.subdomain}}/post/{{.post.ID}}/autosave',
-        autoSaveKey: 'edit_post_{{.post.ID}}'
+        autoSaveUrl: isDraft ? '/admin/{{.subdomain}}/post/{{.post.ID}}/autosave' : null
     });
 
     const subdomain = '{{.subdomain}}';
