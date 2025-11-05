@@ -21,8 +21,7 @@
 <form action="/admin/{{.subdomain}}/menu" method="POST">
     <label for="txt_nav" class="width">
         Links de Navegação (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
-        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
-        <textarea id="txt_nav" name="nav" rows="10" style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> {{.blog.Nav}}</textarea>
+        <textarea id="txt_nav" name="nav" rows="10">{{.blog.Nav}}</textarea>
     </label>
 
     <button type="submit">Salvar Menu</button>
@@ -30,10 +29,10 @@
 </form>
 
 <script>
-    // Inicializar TinyMDE sem auto-save (menu não é rascunho)
-    const tinyMDEManager = new TinyMDEManager({
+    // Inicializar EasyMDE sem auto-save (menu não é rascunho)
+    const easyMDEManager = new EasyMDEManager({
         textareaId: 'txt_nav',
-        autoSave: false
+        autoSaveUrl: null
     });
 </script>
 

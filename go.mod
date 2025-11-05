@@ -1,4 +1,4 @@
-module harmonista
+module caixapostal
 
 go 1.23.0
 

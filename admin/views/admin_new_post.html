@@ -19,11 +19,8 @@
 
     <label for="txt_content" class="width">
         Conteúdo (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
-        <small>Dica: Use Ctrl+R para visualizar o markdown renderizado • F11 para tela cheia</small>
+        <textarea id="txt_content" name="content" rows="20" required></textarea>
     </label>
-    <section style="background-color: #ffffff;">
-        <textarea id="txt_content" name="content" rows="20" required style="font-family: 'Courier New', monospace; white-space: pre-wrap;"> </textarea>
-    </section>
     <input type="hidden" id="draft" name="draft" value="true">
     <section>
         <button type="submit" name="action" value="save_draft">Salvar Rascunho</button>
@@ -33,12 +30,10 @@
 </form>
 
 <script>
-    // Inicializar TinyMDE com auto-save habilitado (é um novo post, então é sempre rascunho)
-    const tinyMDEManager = new TinyMDEManager({
+    // Inicializar EasyMDE com auto-save habilitado (é um novo post, então é sempre rascunho)
+    const easyMDEManager = new EasyMDEManager({
         textareaId: 'txt_content',
-        autoSave: true,
-        autoSaveUrl: '/admin/{{.subdomain}}/post/autosave',
-        autoSaveKey: 'new_post'
+        autoSaveUrl: '/admin/{{.subdomain}}/post/autosave'
     });
 
     document.querySelector('button[value="save_draft"]').addEventListener('click', function () {
