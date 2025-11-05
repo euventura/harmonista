@@ -61,12 +61,7 @@ class EasyMDEManager {
                 'quote',
                 'unordered-list',
                 'ordered-list',
-                '|',
-                'link',
-                'image',
-                '|',
                 'preview',
-                'side-by-side',
                 'fullscreen',
                 '|',
                 'guide'
@@ -209,15 +204,85 @@ class EasyMDEManager {
         }
     }
 }
+class EasyMDEMenu {
+    constructor(options = {}) {
+        this.textareaId = options.textareaId || 'txt_content';
+        this.titleId = options.titleId || 'title';
+        this.isDraftField = options.isDraftField || 'draft';
+        this.autoSaveUrl = options.autoSaveUrl || null;
+        this.autoSaveInterval = options.autoSaveInterval || 30000; // 30 segundos
 
+        this.editor = null;
+        this.autoSaveTimer = null;
+        this.originalContent = '';
+        this.hasChanges = false;
+
+        this.init();
+    }
+
+    init() {
+        this.createEditor();
+    }
+
+    createEditor() {
+        const textarea = document.getElementById(this.textareaId);
+        if (!textarea) {
+            console.error(`Textarea com ID '${this.textareaId}' não encontrado`);
+            return;
+        }
+
+        // Configuração do EasyMDE
+        this.editor = new EasyMDE({
+            element: textarea,
+            autoDownloadFontAwesome: true,
+            autofocus: false,
+            hideIcons: ['side-by-side'],
+            indentWithTabs: false,
+            tabSize: 2,
+            lineNumbers: false,
+            lineWrapping: true,
+            minHeight: '300px',
+            placeholder: 'Digite seu conteúdo em Markdown...',
+            spellChecker: false,
+            status: ['lines', 'words', 'cursor'], // Barra de status
+            styleSelectedText: true,
+
+            // Toolbar customizada
+            toolbar: [
+                'link',
+            ],
+        });
+
+        // Salvar conteúdo original
+        this.originalContent = this.editor.value();
+
+
+        // Sincronizar com textarea original (para compatibilidade com formulários)
+        this.editor.codemirror.on('change', () => {
+            textarea.value = this.editor.value();
+        });
+    }
+
+
+    destroy() {
+        if (this.autoSaveTimer) {
+            clearInterval(this.autoSaveTimer);
+        }
+
+        if (this.editor) {
+            this.editor.toTextArea();
+            this.editor = null;
+        }
+    }
+}
 // Função global para inicializar facilmente
 window.initEasyMDE = function(options = {}) {
     // Aguardar o DOM e o EasyMDE carregarem
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            return new EasyMDEManager(options);
+            return new EasyMDEMenu(options);
         });
     } else {
-        return new EasyMDEManager(options);
+        return new EasyMDEMenu(options);
     }
 };
