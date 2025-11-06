@@ -1,9 +1,7 @@
-# .gitignore padrão para projetos Go
-# Ajuste conforme a necessidade do seu repositório.
-*.exe
-*.dll
-*.so
-*.dylib
+main
+main.service
+harmonista
+harmonista.service
 
 
 *.test
@@ -21,24 +19,21 @@ cache/*
 *.key
 *.pem
 
-# Bancos de dados locais / arquivos de dados
 *.db
 *.sqlite
 *.sqlite3
 *.db-shm
 *.db-wal
 
-# Logs e arquivos temporários
 *.log
 *.tmp
 *.temp
 
-# SO/Editor
 .DS_Store
 Thumbs.db
 
-# Editors/IDEs
 .idea/
 .vscode/
 *.swp
 *.swo
+.claude
