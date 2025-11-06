@@ -1,27 +1,18 @@
 {{ template "site_header.html" .}}
 
 <section class="list-reader">
-
-    <article class="list-reader-description">
-        Leia o que estamos escrevendo
-    </article>
+    <h3 style="margin-bottom: 0">Lista de leitura</h3>
+    <small class="muted" style="font-size: 12px">Seu artigo não está aparecendo aqui ? Você precisa autorizar a listagem nas configurações.</small>
 
     <article class="lists">
         {{ if .posts }}
         <dl class="post-list">
             {{ range .posts }}
             <dt class="post-list-item">
-                <small class="date">{{ .CreatedAt.Format "02/01/2006" }}</small>
+                <small class="date" style="font-size: 15px">{{ .CreatedAt.Format "02/01/2006" }} </small>
                 <a class="item-link" href="/@/{{ .BlogSubdomain }}/{{ .Slug }}">{{ .Title }}</a>
-
+                <small class="muted" style="font-size: 15px">@{{ .BlogSubdomain }}</small>
             </dt>
-            <dd>
-                <small class="muted">{{ $.domain }}/@/{{ .BlogSubdomain }}
-                    {{ range .Tags }}
-                    / <a href="/leia/{{ .Title }}">#{{ .Title }}</a>
-                    {{ end }}
-                </small>
-            </dd>
             {{ end }}
         </dl>
         {{ else }}

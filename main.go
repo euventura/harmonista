@@ -90,7 +90,7 @@ func main() {
 	siteModule := site.NewSiteModule(db, analyticsModule)
 	siteModule.RegisterRoutes(router)
 
-	adminModule := admin.NewAdminModule(db)
+	adminModule := admin.NewAdminModule(db, analyticsModule)
 	adminModule.RegisterRoutes(router)
 
 	blogModule := blog.NewBlogModule(db, analyticsModule)

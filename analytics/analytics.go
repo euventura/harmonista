@@ -48,6 +48,8 @@ func NewAnalyticsModule(db *gorm.DB) *AnalyticsModule {
 }
 
 // TrackVisit registra uma visita no banco de dados de analytics
+// Implementa throttling para evitar contar múltiplos refreshes:
+// - Só registra se a última visita do mesmo usuário foi há mais de 30 minutos
 func (a *AnalyticsModule) TrackVisit(c *gin.Context, blogID int, postID *int) {
 	if a == nil || a.db == nil {
 		return // Analytics desabilitado
@@ -55,6 +57,27 @@ func (a *AnalyticsModule) TrackVisit(c *gin.Context, blogID int, postID *int) {
 
 	// Obter ou criar cookie ID para identificar visitante único
 	cookieID := a.getOrCreateCookieID(c)
+
+	// Verificar se já existe uma visita recente deste usuário neste blog/post
+	// (últimos 30 minutos)
+	thirtyMinutesAgo := time.Now().Add(-30 * time.Minute)
+
+	var recentVisit BlogEvent
+	query := a.db.Where("cookie_id = ? AND blog_id = ? AND created_at > ?",
+		cookieID, blogID, thirtyMinutesAgo)
+
+	// Se for visita a um post específico, verificar também o post_id
+	if postID != nil {
+		query = query.Where("post_id = ?", *postID)
+	} else {
+		// Se for visita à página inicial, verificar visitas onde post_id é NULL
+		query = query.Where("post_id IS NULL")
+	}
+
+	if err := query.First(&recentVisit).Error; err == nil {
+		// Já existe uma visita recente, não registrar novamente
+		return
+	}
 
 	// Capturar IP
 	ip := a.getClientIP(c)
@@ -188,4 +211,91 @@ func (a *AnalyticsModule) extractLanguage(c *gin.Context) *string {
 	}
 
 	return nil
+}
+
+// DayVisits representa o número de visitas em um dia específico
+type DayVisits struct {
+	Date  string
+	Count int64
+}
+
+// PostVisits representa o número de visitas de um post específico
+type PostVisits struct {
+	PostID    int
+	PostTitle string
+	Count     int64
+}
+
+// GetPostVisitCount retorna o número total de visitas de um post específico
+func (a *AnalyticsModule) GetPostVisitCount(postID int) int64 {
+	if a == nil || a.db == nil {
+		return 0
+	}
+
+	var count int64
+	a.db.Model(&BlogEvent{}).Where("post_id = ?", postID).Count(&count)
+	return count
+}
+
+// GetVisitsByDay retorna o número de visitas por dia dos últimos N dias
+func (a *AnalyticsModule) GetVisitsByDay(blogID int, days int) []DayVisits {
+	if a == nil || a.db == nil {
+		return []DayVisits{}
+	}
+
+	startDate := time.Now().AddDate(0, 0, -days)
+
+	var results []struct {
+		Date  string
+		Count int64
+	}
+
+	a.db.Model(&BlogEvent{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("blog_id = ? AND created_at >= ?", blogID, startDate).
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&results)
+
+	// Criar mapa com todos os dias dos últimos N dias
+	dayVisits := make([]DayVisits, days)
+	for i := 0; i < days; i++ {
+		date := time.Now().AddDate(0, 0, -(days - 1 - i))
+		dayVisits[i] = DayVisits{
+			Date:  date.Format("2006-01-02"),
+			Count: 0,
+		}
+	}
+
+	// Preencher com os dados reais
+	for _, result := range results {
+		for i := range dayVisits {
+			if dayVisits[i].Date == result.Date {
+				dayVisits[i].Count = result.Count
+				break
+			}
+		}
+	}
+
+	return dayVisits
+}
+
+// GetTopPosts retorna os N posts mais visitados dos últimos X dias
+func (a *AnalyticsModule) GetTopPosts(blogID int, days int, limit int) []PostVisits {
+	if a == nil || a.db == nil {
+		return []PostVisits{}
+	}
+
+	startDate := time.Now().AddDate(0, 0, -days)
+
+	var results []PostVisits
+	a.db.Model(&BlogEvent{}).
+		Select("post_id as post_id, COUNT(*) as count").
+		Where("blog_id = ? AND post_id IS NOT NULL AND created_at >= ?", blogID, startDate).
+		Group("post_id").
+		Order("count DESC").
+		Limit(limit).
+		Scan(&results)
+
+	return results
 }
