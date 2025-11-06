@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"harmonista/admin"
+	"harmonista/analytics"
 	"harmonista/blog"
 	"harmonista/cache"
 	"harmonista/common"
@@ -36,6 +37,10 @@ func main() {
 	if err := database.RunMigrations(db); err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}
+
+	// Conectar ao banco de analytics (separado)
+	analyticsDb := common.ConnectAnalyticsDb()
+	analyticsModule := analytics.NewAnalyticsModule(analyticsDb)
 
 	router := gin.Default()
 
@@ -86,13 +91,13 @@ func main() {
 
 	router.Static("/public", "./public")
 
-	siteModule := site.NewSiteModule(db)
+	siteModule := site.NewSiteModule(db, analyticsModule)
 	siteModule.RegisterRoutes(router)
 
-	adminModule := admin.NewAdminModule(db)
+	adminModule := admin.NewAdminModule(db, analyticsModule)
 	adminModule.RegisterRoutes(router)
 
-	blogModule := blog.NewBlogModule(db)
+	blogModule := blog.NewBlogModule(db, analyticsModule)
 	blogModule.RegisterRoutes(router)
 
 	// Configurar servidores HTTP e HTTPS

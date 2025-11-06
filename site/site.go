@@ -9,15 +9,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"harmonista/analytics"
 	"harmonista/models"
 )
 
 type SiteModule struct {
-	db *gorm.DB
+	db        *gorm.DB
+	analytics *analytics.AnalyticsModule
 }
 
-func NewSiteModule(db *gorm.DB) *SiteModule {
-	return &SiteModule{db: db}
+func NewSiteModule(db *gorm.DB, analyticsModule *analytics.AnalyticsModule) *SiteModule {
+	return &SiteModule{
+		db:        db,
+		analytics: analyticsModule,
+	}
 }
 
 func (s *SiteModule) RegisterRoutes(router *gin.Engine) {
@@ -173,7 +178,7 @@ func (s *SiteModule) sitemap(c *gin.Context) {
 	if domain == "" {
 		domain = "http://localhost"
 	}
-	
+
 	// Remove trailing slash if present
 	domain = strings.TrimSuffix(domain, "/")
 

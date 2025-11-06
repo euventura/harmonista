@@ -1,0 +1,164 @@
+{{ template "admin_header.html" .}}
+
+<h2>Estatísticas de Visitas</h2>
+
+{{if not .analyticsEnabled}}
+<section>
+    <p>Analytics não está configurado para este blog.</p>
+</section>
+{{else}}
+<section>
+<article>
+
+    <h3>Visitas</h3>
+    <div class="chart-container">
+        {{range .visitsByDay}}
+        <div class="chart-bar-wrapper">
+            <div class="chart-bar" style="height: {{printf "%.2f" .Percentage}}%;">
+                <span class="bar-value">{{.Count}}</span>
+            </div>
+            <span class="bar-label">{{slice .Date 5}}</span>
+        </div>
+        {{end}}
+    </div>
+</article>
+
+<article>
+    <h3>Posts</h3>
+    {{if .topPosts}}
+    <div class="posts-chart-container">
+        {{range .topPosts}}
+        <div class="post-chart-row">
+            <div class="post-title">{{.PostTitle}}</div>
+            <div class="post-bar-wrapper">
+                <div class="post-bar" style="width: {{printf "%.2f" .Percentage}}%;">
+                    <span class="post-bar-value">{{.Count}}</span>
+                </div>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <p>Nenhuma visita registrada ainda.</p>
+    {{end}}
+</article>
+</section>
+<style>
+    /* Gráfico de visitas diárias */
+    .chart-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        height: 250px;
+        gap: 2px;
+    }
+
+    .chart-bar-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        justify-content: flex-end;
+    }
+
+    .chart-bar {
+        width: 100%;
+        background-color: var(--muted);
+        min-height: 2px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 4px;
+        transition: background-color 0.2s;
+    }
+
+    .bar-value {
+        font-size: 0.7rem;
+        color: white;
+        font-weight: bold;
+    }
+
+    .bar-label {
+        font-size: 0.65rem;
+        margin-top: 4px;
+        text-align: center;
+        color: #666;
+    }
+
+    /* Gráfico de posts mais visitados */
+    .posts-chart-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .post-chart-row {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .post-title {
+        flex: 0 0 300px;
+        font-size: 0.9rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .post-bar-wrapper {
+        flex: 1;
+        height: 30px;
+        background-color: #f0f0f0;
+        position: relative;
+    }
+
+    .post-bar {
+        height: 100%;
+        background-color: #4a90e2;
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+        min-width: 40px;
+        transition: background-color 0.2s;
+    }
+
+    .post-bar:hover {
+        background-color: #357abd;
+    }
+
+    .post-bar-value {
+        font-size: 0.8rem;
+        color: white;
+        font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+        .chart-container {
+            height: 200px;
+        }
+
+        .bar-label {
+            font-size: 0.55rem;
+        }
+
+        .post-chart-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .post-title {
+            flex: 1;
+        }
+
+        .post-bar-wrapper {
+            width: 100%;
+        }
+    }
+</style>
+
+{{end}}
+
+{{ template "admin_footer.html" .}}

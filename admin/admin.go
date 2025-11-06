@@ -17,17 +17,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"harmonista/analytics"
 	"harmonista/cache"
 	emailpkg "harmonista/email"
 	"harmonista/models"
 )
 
 type AdminModule struct {
-	db *gorm.DB
+	db        *gorm.DB
+	analytics *analytics.AnalyticsModule
 }
 
-func NewAdminModule(db *gorm.DB) *AdminModule {
-	return &AdminModule{db: db}
+func NewAdminModule(db *gorm.DB, analyticsModule *analytics.AnalyticsModule) *AdminModule {
+	return &AdminModule{
+		db:        db,
+		analytics: analyticsModule,
+	}
 }
 
 func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
@@ -66,6 +71,7 @@ func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
 		adminGroup.POST("/menu", a.updateMenu)
 		adminGroup.GET("/config", a.config)
 		adminGroup.POST("/config", a.updateConfig)
+		adminGroup.GET("/visitas", a.analytics_page)
 	}
 
 	router.GET("/admin/dashboard", a.requireAuth, a.dashboard)
@@ -810,11 +816,19 @@ func (a *AdminModule) editPost(c *gin.Context) {
 
 	tags := a.getPostTags(int(post.ID))
 
+	// Buscar contagem de visitas do post
+	postIDInt, _ := strconv.Atoi(postID)
+	visitCount := int64(0)
+	if a.analytics != nil {
+		visitCount = a.analytics.GetPostVisitCount(postIDInt)
+	}
+
 	c.HTML(http.StatusOK, "admin_edit_post.html", gin.H{
-		"subdomain": subdomain,
-		"post":      post,
-		"blog":      blog,
-		"tags":      tags,
+		"subdomain":  subdomain,
+		"post":       post,
+		"blog":       blog,
+		"tags":       tags,
+		"visitCount": visitCount,
 	})
 }
 
@@ -1343,4 +1357,107 @@ func hashPassword(password string) (string, error) {
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+// Structs para dados do analytics com porcentagens calculadas
+type DayVisitChart struct {
+	Date       string
+	Count      int64
+	Percentage float64
+}
+
+type PostVisitChart struct {
+	PostID     int
+	PostTitle  string
+	Count      int64
+	Percentage float64
+}
+
+func (a *AdminModule) analytics_page(c *gin.Context) {
+	subdomain := c.Param("subdomain")
+	blogData, exists := c.Get("blog")
+	if !exists {
+		c.HTML(http.StatusNotFound, "admin_error.html", gin.H{
+			"error": "Blog não encontrado",
+		})
+		return
+	}
+	blog := blogData.(*models.Blog)
+
+	// Se analytics não está configurado, mostrar mensagem
+	if a.analytics == nil {
+		c.HTML(http.StatusOK, "admin_analytics.html", gin.H{
+			"subdomain":        subdomain,
+			"blog":             blog,
+			"analyticsEnabled": false,
+		})
+		return
+	}
+
+	// Buscar visitas por dia dos últimos 30 dias
+	visitsByDay := a.analytics.GetVisitsByDay(blog.ID, 15)
+
+	// Buscar top 10 posts dos últimos 30 dias
+	topPosts := a.analytics.GetTopPosts(blog.ID, 30, 10)
+
+	// Buscar títulos dos posts
+	for i := range topPosts {
+		var post models.Post
+		if err := a.db.First(&post, topPosts[i].PostID).Error; err == nil {
+			topPosts[i].PostTitle = post.Title
+		} else {
+			topPosts[i].PostTitle = "Post não encontrado"
+		}
+	}
+
+	// Calcular valor máximo para normalização dos gráficos
+	maxVisitsPerDay := int64(1)
+	for _, day := range visitsByDay {
+		if day.Count > maxVisitsPerDay {
+			maxVisitsPerDay = day.Count
+		}
+	}
+
+	maxVisitsPerPost := int64(1)
+	for _, post := range topPosts {
+		if post.Count > maxVisitsPerPost {
+			maxVisitsPerPost = post.Count
+		}
+	}
+
+	// Converter para structs com porcentagens calculadas
+	dayCharts := make([]DayVisitChart, len(visitsByDay))
+	for i, day := range visitsByDay {
+		percentage := 0.0
+		if maxVisitsPerDay > 0 {
+			percentage = (float64(day.Count) / float64(maxVisitsPerDay)) * 100
+		}
+		dayCharts[i] = DayVisitChart{
+			Date:       day.Date,
+			Count:      day.Count,
+			Percentage: percentage,
+		}
+	}
+
+	postCharts := make([]PostVisitChart, len(topPosts))
+	for i, post := range topPosts {
+		percentage := 0.0
+		if maxVisitsPerPost > 0 {
+			percentage = (float64(post.Count) / float64(maxVisitsPerPost)) * 100
+		}
+		postCharts[i] = PostVisitChart{
+			PostID:     post.PostID,
+			PostTitle:  post.PostTitle,
+			Count:      post.Count,
+			Percentage: percentage,
+		}
+	}
+
+	c.HTML(http.StatusOK, "admin_analytics.html", gin.H{
+		"subdomain":        subdomain,
+		"blog":             blog,
+		"analyticsEnabled": true,
+		"visitsByDay":      dayCharts,
+		"topPosts":         postCharts,
+	})
 }
