@@ -2,8 +2,8 @@ name: Deploy to Production
 
 on:
   push:
-    branches:
-      - master  # Dispara quando houver push na branch master
+    tags:
+      - 'v*'  # Dispara quando criar tags como v1.0.0, v1.2.3, etc.
   workflow_dispatch:  # Permite execução manual pelo GitHub
 
 jobs:
@@ -18,7 +18,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'  # Ajuste para a versão do Go que você usa
+          go-version: '1.23'  # Corresponde à versão no go.mod
+          cache: true
+
+      - name: Download dependencies
+        run: |
+          echo "Downloading Go dependencies..."
+          go mod download
+          go mod verify
 
       - name: Download dependencies
         run: |

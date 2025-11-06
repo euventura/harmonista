@@ -17,6 +17,7 @@ import (
 	"harmonista/admin"
 	"harmonista/analytics"
 	"harmonista/blog"
+	"harmonista/cache"
 	"harmonista/common"
 	"harmonista/database"
 	"harmonista/site"
@@ -69,6 +70,9 @@ func main() {
 
 	// Add subdomain middleware
 	router.Use(common.SubdomainMiddleware())
+
+	// Add cache middleware
+	router.Use(cache.Middleware())
 
 	router.SetFuncMap(map[string]interface{}{
 		"now": func() time.Time {
