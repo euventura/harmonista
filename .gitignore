@@ -1,7 +1,5 @@
 main
-main.service
 harmonista
-harmonista.service
 
 
 *.test
