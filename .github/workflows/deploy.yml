@@ -46,7 +46,7 @@ jobs:
           cp harmonista.service deploy/
 
           # Copiar diretórios necessários mantendo estrutura
-          for dir in public admin/views site/views blog/views; do
+          for dir in public admin/views site/views blog/views backoffice/views; do
             if [ -d "$dir" ]; then
               echo "Copying $dir..."
               mkdir -p "deploy/$(dirname $dir)"
@@ -128,7 +128,7 @@ jobs:
           fi
 
           # Verificar diretórios de views
-          for dir in admin/views site/views blog/views; do
+          for dir in admin/views site/views blog/views backoffice/views; do
             if [ ! -d "/var/www/harmonista/$dir" ]; then
               echo "❌ ERROR: Required directory not found: $dir"
               exit 1

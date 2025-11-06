@@ -14,6 +14,7 @@ type User struct {
 type Blog struct {
 	ID           int    `gorm:"primary_key;autoIncrement" json:"id"`
 	UserID       int    `gorm:"not null;index" json:"user_id"` // auto-filled
+	User         User   `gorm:"foreignKey:UserID" json:"user"` // relação com User
 	Title        string `gorm:"not null" json:"title"`         //mandatory
 	Description  string `gorm:"type:text" json:"description"`  // Description for homepage and SEO
 	Subdomain    string `gorm:"unique;not null;index" json:"subdomain"`

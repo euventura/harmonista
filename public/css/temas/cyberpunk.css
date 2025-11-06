@@ -1,0 +1,96 @@
+
+/* Tema Cyberpunk */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono&display=swap');
+
+body {
+    background-color: #0a0a0a;
+    color: #d0d0d0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+    line-height: 1.8;
+    width: 980px;
+    margin: 0 auto;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    border-left: 2px solid #ff00ff; /* Magenta */
+    border-right: 2px solid #00ffff; /* Ciano */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', sans-serif;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow:
+        0 0 5px #ff00ff,
+        0 0 10px #ff00ff,
+        0 0 20px #ff00ff;
+}
+
+a {
+    color: #00ffff; /* Ciano */
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    color: #0a0a0a;
+    background-color: #00ffff;
+    box-shadow: 0 0 15px #00ffff;
+}
+
+header.main-header, .blog-post, .blog-tag-header, .post-list-item, .blog-empty {
+    background-color: rgba(16, 16, 16, 0.8);
+    border: 1px solid #333;
+    padding: 20px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(5px);
+}
+
+.post-list-item {
+    border-bottom: 1px solid #333;
+    transition: border-color 0.3s ease;
+}
+
+.post-list-item:hover {
+    border-color: #ff00ff;
+}
+
+.post-list-item .date {
+    color: #999;
+    font-size: 0.8em;
+}
+
+.post-list-item .item-link {
+    font-size: 1.2em;
+    color: #d0d0d0;
+}
+
+.blog-post-tags a {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 5px;
+    border: 1px solid #3cff00; /* Verde Limão */
+    color: #3cff00;
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+
+.blog-post-tags a:hover {
+    background-color: #3cff00;
+    color: #0a0a0a;
+    box-shadow: 0 0 10px #3cff00;
+}
+
+footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #555;
+    border-top: 1px solid #333;
+    padding-top: 20px;
+}

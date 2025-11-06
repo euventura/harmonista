@@ -7,13 +7,59 @@
 </head>
 <body>
 <main>
-    <section>
-        <article class="blog-menu">
-            <h1 class="blog-name">■</h1>
-            <a href="#">■</a>
-            <blockquote>■</blockquote>
+    <header>
+        <h1 class="blog-name"><a href="#">Titulo</a></h1>
+    </header>
+    <section class="blog-post-list">
+        <article class="blog-description">
+            <p>Loren ipsun sit amet dolum</p>
+            <h3>H3</h3>
+            <blockquote>
+               Citacao
+            </blockquote>
+            <h4>h4</h4>
+            <h5>hcintrinho</h5>
+        </article>
+
+        <article class="blog-posts">
+
+            <ul class="post-list">
+
+                <li class="post-list-item">
+                    <small class="date">02/11/2025</small>
+                    <a class="item-link" href="#">Lista</a>
+                </li>
+
+            </ul>
+
         </article>
     </section>
+
+
 </main>
 </body>
+<script>
+
+    window.onload = (event) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const path = urlParams.get('css');
+        loadCss(path);
+    };
+
+
+    function loadCss(cssPath){
+        var cssId = 'myCss';  // you could encode the css path itself to generate id..
+        if (!document.getElementById(cssId))
+        {
+            var head  = document.getElementsByTagName('head')[0];
+            var link  = document.createElement('link');
+            link.id   = cssId;
+            link.rel  = 'stylesheet';
+            link.type = 'text/css';
+            link.href = cssPath;
+            link.media = 'all';
+            head.appendChild(link);
+        }
+    }
+</script>
 </html>

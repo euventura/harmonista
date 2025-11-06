@@ -14,16 +14,16 @@
         text-align: center;
     }
     .theme-card h3 {
-        margin: 0 0 10px 0;
+        margin: 0;
         font-size: 14px;
     }
     .theme-preview {
-        margin: 10px 0;
-        border: 1px solid #ddd;
-        width: 64px;
-        height: 64px;
+        border: none;
+        width: 100%;
         margin-left: auto;
         margin-right: auto;
+        overflow: hidden;
+        border-radius: 0;
     }
     .theme-buttons {
         display: flex;
@@ -38,14 +38,14 @@
 </style>
 
 <section>
-    <h2>Temas Disponíveis</h2>
+    <h2>Temas</h2>
 
     {{if .themes}}
     <div class="themes-grid">
         {{range .themes}}
         <div class="theme-card">
             <h3>{{.}}</h3>
-            <iframe class="theme-preview" src="/public/images/theme.html?css=/public/css/temas/{{.}}" scrolling="no"></iframe>
+            <iframe class="theme-preview" src="/public/images/theme.html?css=/public/css/temas/{{.}}?"  scrolling="no"></iframe>
             <div class="theme-buttons">
                 <button onclick="visualizarTema('/public/css/temas/{{.}}')">Visualizar</button>
                 <button onclick="aplicarTema('{{.}}')">Aplicar</button>

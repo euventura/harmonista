@@ -1,69 +1,268 @@
+/* css
+   file: public/css/themes/NeoBrutalism.css
+*/
+
+/* Fontes */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Rubik:wght@300;400;700&display=swap');
+
 :root{
-  --bg: #f5f6f7; /* very light gray */
-  --paper: #ffffff; /* card background */
-  --line: #111; /* strong outline */
-  --accent: #ff6a3d; /* orange accent */
-  --muted: #666;
-  --pad: 18px;
-  --max-width: 980px;
-  --ct-width: 980px; /* ensure compatibility with base.css which uses --ct-width */
+    --bg: #f7f7f3;
+    --paper: #ffffff;
+    --ink: #0b0b0b;
+    --accent-yellow: #ffd400;
+    --accent-cyan: #00e5ff;
+    --accent-pink: #ff5ec7;
+    --muted-gray: #6b6b6b;
+    --border-black: #111111;
+    --shadow-offset: 8px;
+    --gutter: 18px;
 }
 
-/* Page layout */
-/* Box sizing reset helps prevent unexpected overflows */
-*, *::before, *::after { box-sizing: border-box; }
-body{
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: var(--bg);
-  color: #111;
-  margin:0 auto; /* remove auto centering on body which can introduce odd layout issues */
-  padding:24px 16px;
-  -webkit-font-smoothing:antialiased;
+/* Reset básico */
+* { box-sizing: border-box; }
+html,body { height:100%; margin:0 auto; background:var(--bg); color:var(--ink); font-family:'Rubik',system-ui,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+
+/* Container geral / corpo dos templates */
+header, footer, section, article { display:block; }
+
+/* Header e Footer (se existirem no blog_header.html / blog_footer.html) */
+header.site-header {
+    background: linear-gradient(90deg, var(--paper) 0%, #fff7d9 100%);
+    border: 4px solid var(--border-black);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--border-black);
+    padding: 18px;
+    margin: 20px;
+    position:relative;
 }
-/* Keep main in normal document flow so footer follows (avoid base.css setting height:100% causing absolute footer overlay) */
-main{max-width:var(--max-width);margin:0 auto;background:transparent; padding-bottom:96px; display:block;}
-
-/* Header */
-header{display:flex;align-items:center;justify-content:space-between;border-bottom:6px solid var(--line);padding:12px 0 18px}
-.blog-name{margin:0;font-size:28px;line-height:1}
-.blog-name a{color:var(--line);text-decoration:none;font-weight:800;letter-spacing:0.2px}
-
-/* Menu */
-.blog-menu{list-style:none;margin:0;padding:0;display:flex;gap:10px}
-.blog-menu li{margin:0}
-.blog-menu a{display:inline-block;padding:8px 12px;border:4px solid var(--line);background:var(--paper);color:var(--line);text-decoration:none;font-weight:700}
-.blog-menu a:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-
-/* Post list / index */
-.blog-post-list{padding:var(--pad) 0}
-.blog-description{margin-bottom:18px;padding:16px;border:6px solid var(--line);background:var(--paper)}
-.post-list{list-style:none;margin:0;padding:0}
-.post-list-item{padding:12px;border-bottom:3px dashed rgba(0,0,0,0.08);display:flex;gap:12px;align-items:center}
-.post-list-item .date{font-size:12px;color:var(--muted);min-width:88px}
-.post-list-item .item-link{font-size:18px;font-weight:700;color:var(--line);text-decoration:none;border-bottom:4px solid transparent;padding-bottom:2px}
-.post-list-item .item-link:hover{border-bottom-color:var(--accent)}
-
-.blog-empty{padding:18px;border:4px dashed var(--line);background:var(--paper);text-align:center}
-
-/* Single post */
-.blog-post{padding:var(--pad) 0}
-.blog-post header h2{margin:0 0 6px;font-size:28px}
-.blog-post .date{display:block;color:var(--muted);font-size:13px;margin-bottom:14px}
-.blog-post p, .blog-post ul, .blog-post ol{line-height:1.6;color:#222}
+header.site-header h1, header.site-header .brand {
+    font-family:'Anton', sans-serif;
+    font-size:34px;
+    color:var(--accent-yellow);
+    letter-spacing:1px;
+    text-shadow: 6px 6px 0 var(--border-black);
+    margin:0;
+}
 
 /* Footer */
-footer{margin-top:32px;padding-top:18px;border-top:6px solid var(--line);text-align:center;position:relative;z-index:1;background:transparent}
-footer a{color:var(--line);text-decoration:none}
-footer small{color:var(--muted)}
+footer.site-footer {
+    margin:20px;
+    padding:14px;
+    border:4px solid var(--border-black);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--border-black);
+    background:var(--paper);
+}
 
-/* Utilities */
-a{color:var(--accent)}
+/* Post list area */
+.blog-post-list {
+    margin: 24px;
+    display:block;
+    gap:16px;
+}
 
-/* Neo-brutalist heavy outlines for main sections */
-section, article{background:transparent}
+/* Description card (blog-description) */
+.blog-description {
+    margin-bottom: 18px;
+    padding: 18px;
+    background: linear-gradient(180deg, #fff 0%, #fff8ea 100%);
+    border: 5px solid var(--border-black);
+    box-shadow: calc(var(--shadow-offset) * 0.7) calc(var(--shadow-offset) * 0.7) 0 var(--border-black);
+    border-radius: 6px;
+    font-size: 15px;
+    line-height: 1.4;
+}
 
-/* Make the design feel chunky on small screens */
-@media (max-width:520px){
-  .blog-name{font-size:20px}
-  .post-list-item .item-link{font-size:16px}
+/* Posts container card */
+.blog-posts {
+    padding: 14px;
+    background: repeating-linear-gradient(45deg,#ffffff 0 8px,#fffdf5 8px 16px);
+    border: 5px solid var(--border-black);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--border-black);
+    border-radius: 4px;
+}
+
+/* Lista de posts */
+.post-list { list-style:none; padding:0; margin:0; }
+.post-list-item {
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding: 10px 12px;
+    margin: 8px 0;
+    background: linear-gradient(180deg,#fff,#fffefb);
+    border: 3px solid var(--border-black);
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.95);
+}
+
+/* Date chip */
+.post-list-item .date, small.date {
+    font-size:12px;
+    padding:6px 8px;
+    background:var(--accent-yellow);
+    color:var(--border-black);
+    border:3px solid var(--border-black);
+    border-radius:4px;
+    box-shadow: 3px 3px 0 var(--border-black);
+    min-width:84px;
+    text-align:center;
+    font-weight:700;
+}
+
+/* Link do item */
+.item-link {
+    display:inline-block;
+    color:var(--accent-cyan);
+    font-weight:700;
+    text-decoration:none;
+    padding:8px 12px;
+    border:3px dashed var(--border-black);
+    margin-left:6px;
+    background: linear-gradient(90deg, rgba(0,229,255,0.06), transparent);
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.item-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 6px 6px 0 var(--border-black);
+}
+
+/* Empty state */
+.blog-empty {
+    padding:20px;
+    text-align:left;
+    color:var(--muted-gray);
+    border: 3px dashed rgba(0,0,0,0.7);
+    background: linear-gradient(180deg,#fff9f9,#fff);
+}
+
+/* Posts individuais (blog_post.html) */
+.blog-post {
+    margin: 20px;
+    padding: 22px;
+    background: var(--paper);
+    border: 6px solid var(--border-black);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--border-black);
+    border-radius: 2px;
+}
+.blog-post header h2 {
+    font-family:'Anton',sans-serif;
+    font-size:28px;
+    text-shadow: 5px 5px 0 var(--accent-yellow);
+    color: var(--border-black);
+    margin:6px 0 12px;
+}
+.blog-post header date {
+    display:inline-block;
+    color:var(--muted-gray);
+    margin-left:10px;
+    font-weight:600;
+}
+
+/* Post content */
+.blog-post > :not(header) {
+    line-height:1.6;
+    font-size:15px;
+    color: #222;
+}
+.blog-post img {
+    max-width:100%;
+    border:3px solid var(--border-black);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.95);
+}
+
+/* Tags */
+.blog-post-tags {
+    margin-top:16px;
+}
+.blog-post-tags a {
+    display:inline-block;
+    margin:6px 6px 0 0;
+    padding:6px 10px;
+    border:3px solid var(--border-black);
+    background: linear-gradient(180deg, rgba(255,94,199,0.08), rgba(0,229,255,0.03));
+    color:var(--border-black);
+    font-weight:700;
+    text-decoration:none;
+    border-radius: 6px;
+}
+.blog-post-tags a:hover { transform: translateY(-2px); }
+
+/* Buttons */
+.btn {
+    display:inline-block;
+    padding:10px 14px;
+    border:4px solid var(--border-black);
+    background:linear-gradient(180deg,var(--accent-pink), #e8b9f0);
+    color:white;
+    font-weight:700;
+    border-radius:6px;
+    box-shadow: 6px 6px 0 var(--border-black);
+    cursor:pointer;
+    text-decoration:none;
+}
+.btn.ghost {
+    background:transparent;
+    color:var(--border-black);
+    border-style:double;
+}
+
+/* Card-like octagon label (inspiration from image) */
+.octagon-label {
+    display:inline-block;
+    padding:8px 18px;
+    background:var(--paper);
+    border:5px solid var(--border-black);
+    box-shadow: 8px 8px 0 var(--border-black);
+    font-weight:800;
+    position:relative;
+    margin: 10px 6px;
+    clip-path: polygon(10% 0, 90% 0, 100% 25%, 100% 75%, 90% 100%, 10% 100%, 0 75%, 0 25%);
+}
+
+/* Tabs */
+.tabs {
+    display:flex;
+    gap:12px;
+    border-bottom:3px solid var(--border-black);
+    padding:8px 6px;
+    margin-top:12px;
+}
+.tab {
+    padding:8px 12px;
+    border:3px solid var(--border-black);
+    background:linear-gradient(180deg,#fff,#fafafa);
+    font-weight:700;
+}
+.tab.active {
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-yellow));
+    color:var(--border-black);
+    box-shadow: 4px 4px 0 var(--border-black);
+}
+
+/* Utility: strong neon highlights inside text */
+.highlight {
+    background: linear-gradient(90deg,var(--accent-yellow), #fff0 40%);
+    padding:0 6px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.9);
+    font-weight:800;
+}
+
+/* Code / pre blocks */
+pre, code {
+    font-family: 'Courier New',ui-monospace,monospace;
+    background:#f3f3f3;
+    border:3px solid var(--border-black);
+    padding:8px;
+    border-radius:4px;
+    display:block;
+}
+
+/* Small screens: reduce offsets */
+@media (max-width:720px){
+    header.site-header, .blog-post, .blog-posts, .blog-description, footer.site-footer {
+        margin:12px; padding:12px;
+        box-shadow: 4px 4px 0 var(--border-black);
+    }
+    :root { --shadow-offset:4px; }
+    header.site-header h1 { font-size:26px; text-shadow:3px 3px 0 var(--border-black); }
+    .post-list-item { flex-direction:column; align-items:flex-start; }
+    .post-list-item .date { min-width:auto; }
 }

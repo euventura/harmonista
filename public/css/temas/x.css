@@ -1,0 +1,90 @@
+
+/* Tema Monokai Pro */
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+
+body {
+    background-color: #2D2A2E; /* Fundo Monokai */
+    color: #FCFCFA;
+    font-family: 'Fira Code', monospace;
+    font-size: 16px;
+    line-height: 1.7;
+    width: 980px;
+    margin: 0 auto;
+}
+
+.container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #FFD866; /* Amarelo */
+    font-weight: bold;
+}
+
+a {
+    color: #A9DC76; /* Verde */
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    color: #2D2A2E;
+    background-color: #A9DC76;
+}
+
+header.main-header, .blog-description, .blog-post, .blog-tag-header, .post-list-item, .blog-empty {
+    background-color: #3E3B3F;
+    border: 1px solid #4c484d;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-list-item .date {
+    color: #78DCE8; /* Ciano */
+    font-size: 0.9em;
+}
+
+.post-list-item .item-link {
+    font-size: 1.2em;
+    color: #FCFCFA;
+}
+
+.blog-post header h2 {
+    color: #FF6188; /* Rosa */
+}
+
+.blog-post header date {
+    color: #78DCE8;
+}
+
+.blog-post-tags a {
+    display: inline-block;
+    padding: 5px 15px;
+    margin: 5px;
+    background-color: #4c484d;
+    color: #AB92E8; /* Roxo */
+    border-radius: 5px;
+    font-size: 0.9em;
+}
+
+.blog-post-tags a:hover {
+    background-color: #AB92E8;
+    color: #3E3B3F;
+}
+
+footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #939293;
+    border-top: 1px solid #4c484d;
+    padding-top: 20px;
+}

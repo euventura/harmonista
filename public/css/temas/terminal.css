@@ -1,34 +1,82 @@
+
+/* Tema Terminal */
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 body {
-  background: #000;
-  color: #00ff66;
-  font-family: "Courier New", monospace;
-  font-size: 16px;
-  max-width: 800px;
-  margin: auto;
-  padding: 2rem;
+    background-color: #000000;
+    color: #00ff00; /* Verde brilhante */
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    line-height: 1.5;
+    position: relative;
 }
-h1.blog-name {
-  color: #00ff66;
-  text-align: center;
-  font-size: 2rem;
-  border-bottom: 1px dashed #00ff66;
-  padding-bottom: .5rem;
+
+/* Efeito Scanlines */
+body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    z-index: 2;
+    pointer-events: none;
+    animation: flicker 0.15s infinite;
 }
-.blog-menu { text-align: center; margin: 1rem 0; }
-.blog-menu a { color: #33ff99; }
-article, .blog-description {
-  background: rgba(0,255,100,0.05);
-  border: 1px solid #00ff66;
-  padding: 1rem;
-  margin-bottom: 1rem;
+
+@keyframes flicker {
+  0% { opacity: 0.2; }
+  20% { opacity: 0.8; }
+  40% { opacity: 0.3; }
+  60% { opacity: 0.9; }
+  80% { opacity: 0.2; }
+  100% { opacity: 1; }
 }
-blockquote {
-  border-left: 3px solid #00ff66;
-  color: #99ffc2;
-  padding-left: 1rem;
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
 }
+
+h1, h2, h3, h4, h5, h6 {
+    color: #00ff00;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+a {
+    color: #00ff00;
+    text-decoration: underline;
+}
+
+a:hover {
+    background-color: #00ff00;
+    color: #000000;
+    text-decoration: none;
+}
+
+.post-list-item .date {
+    color: #00cc00;
+    margin-right: 15px;
+}
+
+.blog-post-tags a {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-right: 8px;
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    text-decoration: none;
+}
+
 footer {
-  border-top: 1px solid #00ff66;
-  text-align: center;
-  margin-top: 2rem;
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #00ff00;
+    color: #00cc00;
 }

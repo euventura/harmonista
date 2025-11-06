@@ -1,0 +1,109 @@
+/*
+ * Old Newspapper Theme
+ * file: public/css/themes/old-newspapper.css
+ * Tema inspirado em jornais antigos (estética sépia, fontes serifadas, colunas)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Spectral:wght@300;600&display=swap');
+
+:root{
+  --paper-bg: #f7efe0; /* fundo papeis envelhecido */
+  --paper-cream: #fbf6ec;
+  --ink: #181616;
+  --sepia: #a67c52;
+  --accent: #3b2f2f;
+  --border: rgba(20,18,16,0.95);
+}
+
+/* global reset */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0;background:var(--paper-bg);color:var(--ink);font-family:'Libre Baskerville', 'Times New Roman', serif;font-size:16px;line-height:1.7}
+
+/* subtle paper grain using pseudo element */
+body::before{
+  content:"";
+  position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.12;
+  background-image:radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
+  background-size:6px 6px;
+}
+
+/* container similar to existing site layout */
+main{max-width:980px;margin:28px auto;padding:28px;background:linear-gradient(180deg,var(--paper-cream),var(--paper-bg));border:6px double var(--border);box-shadow:6px 8px 0 rgba(0,0,0,0.08);position:relative;z-index:1}
+
+/* masthead / header */
+header{position:relative;text-align:center;padding:18px 6px;margin-bottom:22px;border-bottom:4px solid var(--border);background:transparent}
+header .blog-name{font-family:'Spectral', 'Georgia', serif;font-weight:700;font-size:48px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin:0;display:inline-block}
+header .blog-name::after{content:"";display:block;height:6px;width:60%;margin:8px auto;background:linear-gradient(90deg,var(--sepia),rgba(0,0,0,0))}
+
+/* navigation/menu */
+.blog-menu, nav, menu{display:block;margin-top:12px;text-align:center}
+.blog-menu li{display:inline-block;margin:0 8px}
+.blog-menu a{font-family:'Libre Baskerville', serif;text-decoration:none;color:var(--ink);font-weight:600;border:2px solid transparent;padding:6px 10px}
+.blog-menu a:hover{background:rgba(0,0,0,0.03);border-color:var(--border)}
+
+/* description area */
+.blog-description{padding:18px;background:transparent;border:0;margin-bottom:12px}
+
+/* posts list cards */
+.blog-posts{padding:12px;background:transparent;border-top:3px double var(--border)}
+.post-list{list-style:none;padding:0;margin:0}
+.post-list-item{display:flex;align-items:center;gap:14px;padding:10px 6px;border-bottom:1px dashed rgba(0,0,0,0.06)}
+.post-list-item .date, small.date{min-width:88px;background:transparent;color:var(--sepia);font-weight:700}
+.item-link{color:var(--accent);font-weight:700;text-decoration:none}
+.item-link:hover{text-decoration:underline}
+
+/* empty state */
+.blog-empty{padding:18px;background:transparent;color:var(--ink);border:1px dashed rgba(0,0,0,0.06)}
+
+/* article / post view style as newspaper columns */
+.blog-post{background:transparent;padding:6px 0;border-bottom:3px double var(--border)}
+.blog-post header h2{font-family:'Spectral',serif;font-size:34px;margin:6px 0 12px;font-weight:700;text-transform:uppercase;color:var(--accent);letter-spacing:1px}
+/* support time and .date class (templates use <date> element but we target class/time to avoid warnings) */
+.blog-post header time,
+.blog-post header .date,
+header time,
+header .date{
+  color:var(--sepia);
+  font-weight:700;
+  font-style:italic;
+}
+
+/* content columns - graceful fallback */
+.blog-post > *:not(header){column-count:2;column-gap:36px;orphans:3;widows:3;padding-right:6px}
+.blog-post img{max-width:100%;display:block;margin:12px auto;border:3px solid var(--border);box-shadow:4px 4px 0 rgba(0,0,0,0.06)}
+
+/* tags */
+.blog-post-tags{margin-top:18px;clear:both}
+.blog-post-tags a{display:inline-block;margin-right:8px;padding:6px 10px;border:2px solid var(--border);background:transparent;color:var(--ink);font-weight:700;text-decoration:none}
+.blog-post-tags a:hover{background:rgba(0,0,0,0.03)}
+
+/* drop cap for first letter */
+.blog-post p:first-of-type::first-letter{float:left;font-size:4.2rem;line-height:1;color:var(--sepia);font-weight:700;padding-right:8px;font-family:'Spectral',serif}
+
+/* blockquote style */
+blockquote{border-left:6px solid var(--border);padding:12px 16px;margin:18px 0;background:rgba(0,0,0,0.02);font-style:italic}
+
+/* tables, pre, code */
+table{width:100%;border-collapse:collapse;margin:1rem 0;background:transparent}
+th,td{padding:8px;border:1px solid rgba(0,0,0,0.06)}
+pre,code{font-family:monospace;background:rgba(0,0,0,0.02);padding:6px;border:1px dashed rgba(0,0,0,0.06)}
+
+/* buttons */
+.btn,button,input[type=submit]{background:var(--accent);color:var(--paper-cream);border:2px solid var(--border);padding:8px 12px;text-transform:uppercase;font-weight:700}
+.btn.ghost{background:transparent;color:var(--accent);border-style:double}
+
+/* small screens: collapse columns */
+@media (max-width:800px){
+  .blog-post > *:not(header){column-count:1}
+  header .blog-name{font-size:28px}
+}
+
+/* utility: masthead ornament */
+header::before, header::after{content:"";height:22px;width:22px;display:inline-block;background:linear-gradient(180deg,rgba(0,0,0,0.12),rgba(0,0,0,0.02));position:absolute;top:18px}
+header::before{left:16px;border-radius:2px}
+header::after{right:16px;border-radius:2px}
+
+/* keep z-index so header sits above body grain */
+header, .blog-post, .blog-post-list{position:relative;z-index:2}
+
+/* end */

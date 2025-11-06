@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="no-index, no-follow">
+    <title>Backoffice - Harmonista</title>
+    <link rel="stylesheet" href="/public/css/base.css">
+</head>
+<body>
+<main>
+    <header>
+        <h1 class="harmonista">⌐◯ᵔ◯ Harmonista</h1>
+        <h2>Backoffice - Área Administrativa</h2>
+    </header>
+
+    <section>
+        {{if .error}}
+        <p style="color: var(--danger);">{{.error}}</p>
+        {{end}}
+
+        <form action="/$/login" method="POST">
+            <label for="email" class="width">
+                Email
+                <input type="email" id="email" name="email" value="{{.email}}" required autofocus>
+            </label>
+
+            <label for="password" class="width">
+                Senha
+                <input type="password" id="password" name="password" required>
+            </label>
+
+            <button type="submit">Entrar</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

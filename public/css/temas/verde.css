@@ -1,0 +1,91 @@
+
+/* Tema Deep Forest */
+
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital@0;1&family=Cinzel&display=swap');
+
+body {
+    background-color: #1a2e28; /* Verde bem escuro */
+    color: #c0c0c0;
+    font-family: 'Lora', serif;
+    font-size: 17px;
+    line-height: 1.8;
+    width: 980px;
+    margin: 0 auto;
+}
+
+.container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', serif;
+    color: #e8dcb5; /* Ouro pálido */
+    font-weight: 400;
+    text-shadow: 1px 1px 3px #000;
+}
+
+a {
+    color: #c8a064; /* Âmbar */
+    text-decoration: none;
+    border-bottom: 1px dotted #c8a064;
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    color: #e8dcb5;
+    background-color: rgba(45, 80, 67, 0.5);
+}
+
+header.main-header, .blog-description, .blog-post, .blog-tag-header, .post-list-item, .blog-empty {
+    background-color: #254038;
+    border: 1px solid #3a5e52;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 3px;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-list-item {
+    border-bottom: 1px solid #3a5e52;
+}
+
+.post-list-item .date {
+    color: #8a9e95;
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+
+.post-list-item .item-link {
+    font-size: 1.3em;
+    color: #e8dcb5;
+}
+
+.blog-post-tags a {
+    display: inline-block;
+    padding: 3px 12px;
+    margin: 5px;
+    background-color: #4a3b2a; /* Marrom escuro */
+    color: #c8a064;
+    border-radius: 20px;
+    font-size: 0.8em;
+    border: 1px solid #604d38;
+}
+
+.blog-post-tags a:hover {
+    background-color: #c8a064;
+    color: #2a1f14;
+}
+
+footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #7a8a83;
+    font-size: 0.9em;
+    padding-top: 20px;
+}

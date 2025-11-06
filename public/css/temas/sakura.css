@@ -1,0 +1,101 @@
+
+/* Tema Sakura */
+
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Quicksand:wght@300;400&display=swap');
+
+body {
+    background-color: #FFF9F9;
+    color: #5c5c5c;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 18px;
+    line-height: 1.7;
+    width: 980px;
+    margin: 0 auto;
+}
+
+.container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Dancing Script', cursive;
+    color: #E68FAC; /* Rosa suave */
+    font-weight: 700;
+    font-size: 2.8em;
+}
+
+a {
+    color: #D66D92;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #BF4A75;
+    text-decoration: underline;
+}
+
+header.main-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-list-item {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #FADADD;
+    transition: border-color 0.3s ease;
+}
+
+.post-list-item:hover {
+    border-color: #E68FAC;
+}
+
+.post-list-item .date {
+    color: #aaa;
+    font-size: 0.8em;
+}
+
+.post-list-item .item-link {
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 400;
+    font-size: 1.3em;
+    color: #5c5c5c;
+}
+
+.blog-post {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+.blog-post header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.blog-post-tags a {
+    display: inline-block;
+    padding: 4px 12px;
+    margin: 5px;
+    background-color: #FADADD;
+    color: #BF4A75;
+    border-radius: 15px;
+    font-size: 0.8em;
+}
+
+footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #aaa;
+    font-size: 0.9em;
+}

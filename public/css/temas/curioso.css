@@ -1,8 +1,8 @@
 
 body {
-    background-color: #0d0d0d;
+    background-color: #2a4d3e;
     color: #fff;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Roboto Slab', serif;
     width: 980px;
     margin: 0 auto;
 }
@@ -14,34 +14,38 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: #00ff00;
-    text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 80px #00ff00;
+    font-family: 'Oswald', sans-serif;
+    color: #ffc425;
+    text-transform: uppercase;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px #000;
 }
 
 a {
-    color: #00ffff;
+    color: #ffc425;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 a:hover {
     color: #fff;
-    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
 }
 
 .post-meta {
     font-size: 0.8em;
-    color: #888;
+    color: #ccc;
 }
 
 .post-content {
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 footer {
     margin-top: 40px;
     text-align: center;
-    color: #888;
+    color: #ccc;
+    border-top: 1px solid #ffc425;
+    padding-top: 20px;
 }
 
 /* Styles for blog_index.html */
@@ -52,9 +56,8 @@ footer {
 .blog-description {
     margin-bottom: 20px;
     padding: 15px;
-    border: 1px solid #00ff00;
+    background-color: rgba(0,0,0,0.2);
     border-radius: 5px;
-    box-shadow: 0 0 10px #00ff00;
 }
 
 .post-list {
@@ -64,57 +67,64 @@ footer {
 
 .post-list-item {
     margin-bottom: 15px;
-    border-bottom: 1px dashed #00ffff;
+    border-bottom: 1px dashed #ffc425;
     padding-bottom: 15px;
 }
 
 .post-list-item .date {
-    color: #888;
+    color: #ccc;
     margin-right: 15px;
 }
 
 .post-list-item .item-link {
-    font-size: 1.2em;
+    font-size: 1.3em;
+    font-weight: 700;
 }
 
 .blog-empty {
     text-align: center;
     padding: 40px;
-    border: 1px dashed #888;
+    background-color: rgba(0,0,0,0.2);
     border-radius: 5px;
 }
 
 /* Styles for blog_post.html */
 .blog-post header {
     margin-bottom: 20px;
+    text-align: center;
 }
 
 .blog-post header h2 {
-    margin-bottom: 5px;
+    font-size: 2.5em;
+    margin-bottom: 10px;
 }
 
 .blog-post header date {
-    color: #888;
+    color: #ccc;
+    font-style: italic;
 }
 
 .blog-post-tags {
-    margin-top: 20px;
+    margin-top: 30px;
+    text-align: center;
 }
 
 .blog-post-tags a {
     display: inline-block;
-    padding: 5px 10px;
-    margin-right: 10px;
-    border: 1px solid #00ffff;
-    border-radius: 3px;
+    padding: 8px 15px;
+    margin: 5px;
+    background-color: #8b4513;
+    color: #fff;
+    border-radius: 20px;
     font-size: 0.9em;
+    text-transform: uppercase;
 }
 
 /* Styles for blog_tag.html */
 .blog-tag-header {
     margin-bottom: 20px;
     padding: 15px;
-    border: 1px solid #00ff00;
+    text-align: center;
+    background-color: rgba(0,0,0,0.2);
     border-radius: 5px;
-    box-shadow: 0 0 10px #00ff00;
 }

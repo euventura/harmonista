@@ -1,0 +1,130 @@
+
+/* Tema Chic & Modern */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
+
+body {
+    background-color: #ffffff;
+    color: #1a1a1a;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 17px;
+    line-height: 1.8;
+    width: 980px;
+    margin: 0 auto;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    color: #1a1a1a;
+    font-weight: 700;
+    text-align: center;
+}
+
+h1.blog-name {
+    font-size: 3.2em;
+    letter-spacing: 2px;
+}
+
+a {
+    color: #b8860b; /* Dourado escuro */
+    text-decoration: none;
+    font-weight: 400;
+}
+
+a:hover {
+    color: #1a1a1a;
+}
+
+header.main-header {
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.blog-menu {
+    text-align: center;
+    padding: 0;
+}
+
+.blog-menu li {
+    display: inline-block;
+    margin: 0 20px;
+}
+
+.blog-menu a {
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-list-item {
+    text-align: center;
+    padding: 30px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.post-list-item .date {
+    color: #999;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.post-list-item .item-link {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8em;
+    color: #1a1a1a;
+}
+
+.blog-post header {
+    margin-bottom: 30px;
+}
+
+.blog-post header h2 {
+    font-size: 2.8em;
+}
+
+.blog-post header date {
+    font-style: italic;
+    color: #888;
+}
+
+.blog-post-tags {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.blog-post-tags a {
+    font-size: 0.8em;
+    color: #b8860b;
+    border: 1px solid #b8860b;
+    padding: 5px 15px;
+    border-radius: 20px;
+    margin: 0 5px;
+}
+
+.blog-post-tags a:hover {
+    background-color: #b8860b;
+    color: #fff;
+}
+
+footer {
+    margin-top: 50px;
+    text-align: center;
+    color: #999;
+    font-size: 0.9em;
+}

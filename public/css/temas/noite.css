@@ -1,0 +1,120 @@
+
+/* Tema Midnight Velvet */
+
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400&family=Playfair+Display&display=swap');
+
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    font-size: 18px;
+    line-height: 1.8;
+    width: 980px;
+    margin: 0 auto;
+}
+
+.container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    color: #ffffff;
+    font-weight: 400;
+}
+
+a {
+    color: #8a3ffc; /* Roxo Aveludado */
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #c7a4ff;
+    text-shadow: 0 0 8px #8a3ffc;
+}
+
+header.main-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+h1.blog-name {
+    font-size: 2.8em;
+    margin-bottom: 10px;
+}
+
+.blog-menu {
+    padding: 0;
+}
+
+.blog-menu li {
+    display: inline-block;
+    margin: 0 15px;
+}
+
+.blog-menu a {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-list-item {
+    padding: 20px 0;
+    border-bottom: 1px solid #282828;
+}
+
+.post-list-item .date {
+    color: #777;
+    font-size: 0.8em;
+}
+
+.post-list-item .item-link {
+    font-size: 1.4em;
+    color: #e0e0e0;
+}
+
+.blog-post header {
+    margin-bottom: 30px;
+}
+
+.blog-post header h2 {
+    font-size: 2.5em;
+}
+
+.blog-post header date {
+    color: #777;
+}
+
+.blog-post-tags {
+    margin-top: 30px;
+}
+
+.blog-post-tags a {
+    font-size: 0.8em;
+    color: #a078ff;
+    border: 1px solid #444;
+    padding: 4px 12px;
+    border-radius: 5px;
+}
+
+.blog-post-tags a:hover {
+    background-color: #8a3ffc;
+    color: #121212;
+}
+
+footer {
+    margin-top: 50px;
+    text-align: center;
+    color: #555;
+    font-size: 0.9em;
+}

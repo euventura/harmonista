@@ -1,0 +1,86 @@
+
+/* Tema Simples */
+
+body {
+    background-color: #ffffff;
+    color: #222222;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #000000;
+    font-weight: 700;
+}
+
+a {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+header.main-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-list-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.post-list-item .date {
+    color: #666;
+    font-size: 0.9em;
+    margin-right: 10px;
+}
+
+.blog-post header {
+    margin-bottom: 20px;
+}
+
+.blog-post header h2 {
+    font-size: 2em;
+}
+
+.blog-post header date {
+    color: #666;
+}
+
+.blog-post-tags {
+    margin-top: 20px;
+}
+
+.blog-post-tags a {
+    font-size: 0.9em;
+    color: #555;
+    background-color: #f0f0f0;
+    padding: 3px 8px;
+    border-radius: 3px;
+    text-decoration: none;
+    margin-right: 5px;
+}
+
+footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #888;
+    font-size: 0.9em;
+    padding-top: 20px;
+}

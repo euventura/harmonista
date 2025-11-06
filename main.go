@@ -16,6 +16,7 @@ import (
 
 	"harmonista/admin"
 	"harmonista/analytics"
+	"harmonista/backoffice"
 	"harmonista/blog"
 	"harmonista/cache"
 	"harmonista/common"
@@ -68,6 +69,9 @@ func main() {
 
 	router.Use(sessions.Sessions("harmonista-session", store))
 
+	// Redirecionar www para non-www (deve vir primeiro)
+	router.Use(common.WWWRedirectMiddleware())
+
 	// Add subdomain middleware
 	router.Use(common.SubdomainMiddleware())
 
@@ -96,6 +100,9 @@ func main() {
 
 	adminModule := admin.NewAdminModule(db, analyticsModule)
 	adminModule.RegisterRoutes(router)
+
+	backofficeModule := backoffice.NewBackofficeModule(db)
+	backofficeModule.RegisterRoutes(router)
 
 	blogModule := blog.NewBlogModule(db, analyticsModule)
 	blogModule.RegisterRoutes(router)

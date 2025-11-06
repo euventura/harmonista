@@ -1,0 +1,540 @@
+/* Old Newspaper Theme - Vintage Editorial Style */
+
+/* ===== Global Reset & Base Styles ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(to bottom, #f4e8d0 0%, #ebe0c8 50%, #e8ddc3 100%);
+    background-attachment: fixed;
+    font-family: 'Times New Roman', 'Garamond', 'Georgia', serif;
+    color: #2a2a2a;
+    line-height: 1.8;
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+}
+
+/* Paper texture overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+main {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 3rem;
+    background: #faf6ed;
+    box-shadow:
+        0 0 0 1px #2a2a2a,
+        0 0 0 8px #faf6ed,
+        0 0 0 9px #2a2a2a,
+        0 10px 30px rgba(0,0,0,0.3);
+    border: 8px double #2a2a2a;
+}
+
+/* ===== Typography ===== */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Georgia', 'Garamond', 'Times New Roman', serif;
+    font-weight: 900;
+    color: #1a1a1a;
+    margin: 1.5rem 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+h1 {
+    font-size: 3.5rem;
+    text-align: center;
+    border-top: 4px double #2a2a2a;
+    border-bottom: 4px double #2a2a2a;
+    padding: 1.5rem 0;
+    margin: 2rem 0;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    line-height: 1.2;
+}
+
+h2 {
+    font-size: 2.5rem;
+    border-bottom: 3px solid #2a2a2a;
+    padding-bottom: 0.5rem;
+    margin-top: 2.5rem;
+}
+
+h3 {
+    font-size: 1.8rem;
+    font-style: italic;
+    font-weight: 700;
+}
+
+h4 {
+    font-size: 1.4rem;
+}
+
+/* Ornamental separator */
+h1::before, h2::before {
+    content: '❦';
+    display: block;
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #5a4a3a;
+}
+
+p {
+    margin: 1rem 0;
+    text-align: justify;
+    text-indent: 2em;
+    hyphens: auto;
+}
+
+/* Drop cap for first paragraph */
+article > p:first-of-type::first-letter,
+section > p:first-of-type::first-letter {
+    float: left;
+    font-size: 4.5rem;
+    line-height: 3.5rem;
+    padding: 0.2rem 0.5rem 0 0;
+    margin: 0.1rem 0.5rem 0 0;
+    font-weight: 900;
+    color: #2a2a2a;
+    border: 2px solid #2a2a2a;
+    background: #e8ddc3;
+}
+
+/* ===== Links ===== */
+a {
+    color: #5a3a1a;
+    text-decoration: underline;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    color: #8a5a2a;
+    text-decoration: none;
+    background: rgba(90, 58, 26, 0.1);
+}
+
+a:visited {
+    color: #4a2a0a;
+}
+
+/* ===== Header Elements ===== */
+header {
+    text-align: center;
+    border-bottom: 5px double #2a2a2a;
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    border: none;
+    font-size: 4rem;
+    letter-spacing: 5px;
+    margin: 0;
+    padding: 1rem 0;
+}
+
+header h1::before {
+    content: '';
+    display: none;
+}
+
+/* Small caps for subtitles */
+header small,
+.subtitle {
+    font-variant: small-caps;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    display: block;
+    margin-top: 0.5rem;
+    color: #5a4a3a;
+}
+
+/* ===== Navigation ===== */
+nav {
+    background: #e8ddc3;
+    border: 2px solid #2a2a2a;
+    padding: 1rem;
+    margin: 2rem 0;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+}
+
+nav a {
+    text-decoration: none;
+    font-variant: small-caps;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    padding: 0.5rem 1rem;
+    border: 1px solid #2a2a2a;
+    background: #faf6ed;
+    display: inline-block;
+}
+
+nav a:hover {
+    background: #2a2a2a;
+    color: #faf6ed;
+}
+
+/* ===== Forms & Inputs ===== */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+textarea,
+select {
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    padding: 0.75rem;
+    border: 2px solid #2a2a2a;
+    background: #fefdf8;
+    color: #2a2a2a;
+    width: 100%;
+    margin: 0.5rem 0;
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #5a4a3a;
+    background: #fff;
+}
+
+button,
+input[type="submit"],
+.button {
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    font-weight: bold;
+    font-variant: small-caps;
+    letter-spacing: 1px;
+    padding: 0.75rem 2rem;
+    border: 3px solid #2a2a2a;
+    background: #e8ddc3;
+    color: #2a2a2a;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+button:hover,
+input[type="submit"]:hover,
+.button:hover {
+    background: #2a2a2a;
+    color: #faf6ed;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* ===== Tables ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    border: 3px double #2a2a2a;
+    background: #fefdf8;
+}
+
+th, td {
+    padding: 1rem;
+    border: 1px solid #2a2a2a;
+    text-align: left;
+}
+
+th {
+    background: #e8ddc3;
+    font-weight: bold;
+    font-variant: small-caps;
+    letter-spacing: 1px;
+    font-size: 1.1rem;
+    border-bottom: 3px double #2a2a2a;
+}
+
+tr:nth-child(even) {
+    background: #f9f6f0;
+}
+
+tr:hover {
+    background: #ebe0c8;
+}
+
+/* ===== Images ===== */
+img {
+    max-width: 100%;
+    height: auto;
+    border: 5px solid #2a2a2a;
+    padding: 0.5rem;
+    background: #faf6ed;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+    filter: sepia(20%) contrast(110%);
+    margin: 1.5rem 0;
+}
+
+figure {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+figcaption {
+    font-style: italic;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    color: #5a4a3a;
+    text-align: center;
+}
+
+/* ===== Blockquotes ===== */
+blockquote {
+    margin: 2rem 2rem;
+    padding: 1.5rem;
+    border-left: 5px solid #2a2a2a;
+    border-right: 5px solid #2a2a2a;
+    background: #f4e8d0;
+    font-style: italic;
+    position: relative;
+}
+
+blockquote::before {
+    content: '"';
+    font-size: 4rem;
+    position: absolute;
+    top: -1rem;
+    left: 0.5rem;
+    color: #5a4a3a;
+    font-family: Georgia, serif;
+}
+
+blockquote p {
+    text-indent: 0;
+}
+
+/* ===== Lists ===== */
+ul, ol {
+    margin: 1rem 0 1rem 2.5rem;
+}
+
+li {
+    margin: 0.5rem 0;
+}
+
+/* ===== Code blocks ===== */
+code {
+    font-family: 'Courier New', 'Courier', monospace;
+    background: #e8ddc3;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid #5a4a3a;
+    font-size: 0.9rem;
+}
+
+pre {
+    background: #e8ddc3;
+    border: 2px solid #2a2a2a;
+    padding: 1.5rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+pre code {
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+
+/* ===== Horizontal Rule ===== */
+hr {
+    border: none;
+    border-top: 3px double #2a2a2a;
+    margin: 2rem 0;
+    position: relative;
+}
+
+hr::after {
+    content: '❦';
+    position: absolute;
+    top: -0.8rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #faf6ed;
+    padding: 0 1rem;
+    font-size: 1.5rem;
+    color: #5a4a3a;
+}
+
+/* ===== Article metadata ===== */
+.meta,
+.post-meta,
+time {
+    font-size: 0.85rem;
+    font-variant: small-caps;
+    letter-spacing: 1px;
+    color: #5a4a3a;
+    border-top: 1px solid #5a4a3a;
+    border-bottom: 1px solid #5a4a3a;
+    padding: 0.5rem 0;
+    margin: 1rem 0;
+    text-align: center;
+}
+
+/* ===== Footer ===== */
+footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 4px double #2a2a2a;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #5a4a3a;
+}
+
+/* ===== Columns layout for articles ===== */
+.columns {
+    column-count: 2;
+    column-gap: 2rem;
+    column-rule: 1px solid #5a4a3a;
+}
+
+@media (max-width: 768px) {
+    .columns {
+        column-count: 1;
+    }
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    main {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-width: 4px;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
+    header h1 {
+        font-size: 3rem;
+        letter-spacing: 3px;
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    th, td {
+        padding: 0.5rem;
+    }
+
+    blockquote {
+        margin: 1rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+    }
+
+    main {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    article > p:first-of-type::first-letter,
+    section > p:first-of-type::first-letter {
+        font-size: 3rem;
+        line-height: 2.5rem;
+    }
+}
+
+/* ===== Special vintage elements ===== */
+.edition,
+.volume {
+    font-variant: small-caps;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.dateline {
+    font-weight: bold;
+    font-variant: small-caps;
+    margin-bottom: 0.5rem;
+}
+
+/* Advertisement style boxes */
+.ad-box,
+.notice {
+    border: 3px double #2a2a2a;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    background: #f4e8d0;
+    text-align: center;
+}
+
+.ad-box h3,
+.notice h3 {
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    margin: 0 0 1rem 0;
+}
+
+/* Masthead style */
+.masthead {
+    text-align: center;
+    border: 5px double #2a2a2a;
+    padding: 2rem;
+    margin: 2rem 0;
+    background: #e8ddc3;
+}
+
+.masthead h1 {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.masthead h1::before {
+    display: none;
+}

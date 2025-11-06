@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="no-index, no-follow">
+    <title>Backoffice - Harmonista</title>
+    <link rel="stylesheet" href="/public/css/base.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--muted);
+        }
+        th {
+            background-color: var(--muted);
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: rgba(0,0,0,0.02);
+        }
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .actions button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .status-verified {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-unverified {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .checkbox-label {
+            cursor: pointer;
+            user-select: none;
+        }
+        input[type="checkbox"] {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <h1 class="harmonista"><a href="/">⌐◯ᵔ◯ Harmonista</a></h1>
+    </header>
+
+    <section>
+        <h3>Blogs Cadastrados ({{len .blogs}})</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Blog</th>
+                    <th>Email do Usuário</th>
+                    <th>Status</th>
+                    <th>Posts</th>
+                    <th>List Reader</th>
+                    <th>Adult</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .blogs}}
+                <tr id="blog-{{.Blog.ID}}">
+                    <td>{{.Blog.ID}}</td>
+                    <td>
+                        <a href="{{ domain }}/@/{{.Blog.Subdomain}}/" target="_blank">
+                            {{.Blog.Title}}
+                        </a>
+                    </td>
+                    <td>{{.Blog.User.Email}}</td>
+                    <td>
+                        {{if .Blog.User.EmailVerified}}
+                        <span class="status-badge status-verified">V</span>
+                        {{else}}
+                        <span class="status-badge status-unverified">N</span>
+                        {{end}}
+                    </td>
+                    <td>{{.PostCount}}</td>
+                    <td>
+                        <label class="checkbox-label">
+                            <input type="checkbox"
+                                   {{if .Blog.IsListReader}}checked{{end}}
+                                   onchange="toggleListReader({{.Blog.ID}}, this)">
+                        </label>
+                    </td>
+                    <td>
+                        <label class="checkbox-label">
+                            <input type="checkbox"
+                                   {{if .Blog.IsAdult}}checked{{end}}
+                                   onchange="toggleAdult({{.Blog.ID}}, this)">
+                        </label>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            {{if not .Blog.User.EmailVerified}}
+                            <button onclick="validateUser({{.Blog.User.ID}}, {{.Blog.ID}})">
+                                Validar Email
+                            </button>
+                            {{end}}
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script>
+function toggleListReader(blogID, checkbox) {
+    fetch('/$/toggle-list-reader/' + blogID, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('List Reader toggled:', data.isListReader);
+        } else {
+            alert('Erro ao atualizar: ' + (data.error || 'Erro desconhecido'));
+            checkbox.checked = !checkbox.checked; // Reverter
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao atualizar');
+        checkbox.checked = !checkbox.checked; // Reverter
+    });
+}
+
+function toggleAdult(blogID, checkbox) {
+    fetch('/$/toggle-adult/' + blogID, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Adult toggled:', data.isAdult);
+        } else {
+            alert('Erro ao atualizar: ' + (data.error || 'Erro desconhecido'));
+            checkbox.checked = !checkbox.checked; // Reverter
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao atualizar');
+        checkbox.checked = !checkbox.checked; // Reverter
+    });
+}
+
+function validateUser(userID, blogID) {
+    if (!confirm('Tem certeza que deseja validar este usuário?')) {
+        return;
+    }
+
+    fetch('/$/validate-user/' + userID, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Usuário validado com sucesso!');
+            // Atualizar a badge de status
+            const row = document.getElementById('blog-' + blogID);
+            const statusCell = row.cells[4];
+            statusCell.innerHTML = '<span class="status-badge status-verified">Verificado</span>';
+
+            // Remover o botão de validar
+            const actionsCell = row.cells[8];
+            actionsCell.innerHTML = '';
+        } else {
+            alert('Erro ao validar usuário: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao validar usuário');
+    });
+}
+</script>
+</body>
+</html>
