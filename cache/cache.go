@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,7 +41,7 @@ func WriteCache(subdomain, slug, html string) error {
 	}
 
 	cachePath := GetCachePath(subdomain, slug)
-	return ioutil.WriteFile(cachePath, []byte(html), 0644)
+	return os.WriteFile(cachePath, []byte(html), 0644)
 }
 
 // ReadCache reads HTML content from cache file if it exists and is not expired
@@ -59,7 +58,7 @@ func ReadCache(subdomain, slug string, maxAge time.Duration) (string, bool) {
 		return "", false
 	}
 
-	content, err := ioutil.ReadFile(cachePath)
+	content, err := os.ReadFile(cachePath)
 	if err != nil {
 		return "", false
 	}
