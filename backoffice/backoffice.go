@@ -264,6 +264,21 @@ func (b *BackofficeModule) clearBlogCache(c *gin.Context) {
 func (b *BackofficeModule) createBlog(c *gin.Context) {
 	userID := c.Param("userID")
 
+	// Verificar se o usuário do backoffice está autorizado
+	backofficeUser, exists := c.Get("backoffice_user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Usuário do backoffice não autenticado"})
+		return
+	}
+
+	backofficeUserData := backofficeUser.(models.User)
+	
+	// Verificar se o email do backoffice ainda está autorizado
+	if !b.isBackofficeEmail(backofficeUserData.Email) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Acesso não autorizado para criar blogs"})
+		return
+	}
+
 	var user models.User
 	if err := b.db.First(&user, userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
