@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.40.0

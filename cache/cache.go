@@ -1,14 +1,13 @@
 package cache
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/cespare/xxhash/v2"
 	"gorm.io/gorm"
 	"harmonista/models"
 )
@@ -21,11 +20,11 @@ func GetCachePath(subdomain, slug string) string {
 	return filepath.Join(cacheDir, fmt.Sprintf("%s_%s.html", slug, shortHash))
 }
 
-// generateHash generates an MD5 hash for the given string
+// generateHash generates an xxHash hash for the given string
 func generateHash(s string) string {
-	hasher := md5.New()
-	hasher.Write([]byte(s))
-	return hex.EncodeToString(hasher.Sum(nil))
+	hash := xxhash.Sum64String(s)
+	// Convert uint64 to hex string
+	return fmt.Sprintf("%016x", hash)
 }
 
 // EnsureCacheDir ensures the cache directory exists
