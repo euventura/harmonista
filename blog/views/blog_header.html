@@ -92,7 +92,7 @@
     <meta name="theme-color" content="#1f2328">
     <link rel="sitemap" type="application/xml" href="{{ domain }}/sitemap.xml">
 
-    <link rel="stylesheet" href="/public/css/base.css">
+    <link rel="stylesheet" href="{{ domain }}/public/css/base.css">
 
     {{ if .previewCSS }}
     <!-- Preview CSS from query parameter -->
@@ -107,7 +107,7 @@
 <body>
 <main>
     <header>
-        <h1 class="blog-name"><a href="/@/{{ .blog.Subdomain }}">{{ .blog.Title }}</a></h1>
+        <h1 class="blog-name"><a href="/@/{{ .blog.Subdomain }}">{{ .blog.Title }}teste</a></h1>
 
         {{ if .navLinks }}
         <menu class="blog-menu">

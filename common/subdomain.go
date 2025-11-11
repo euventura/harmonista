@@ -2,6 +2,7 @@ package common
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -67,13 +68,23 @@ func SubdomainMiddleware() gin.HandlerFunc {
 		if strings.Contains(hostWithoutPort, ".") {
 			parts := strings.Split(hostWithoutPort, ".")
 
-			// Check if it's a subdomain of harmonista.com, harmonista.org or localhost
 			if len(parts) >= 2 {
 				possibleSubdomain := parts[0]
 				domain := strings.Join(parts[1:], ".")
 
-				// Only handle subdomains for harmonista.com, harmonista.org or localhost
-				if domain == "harmonista.com" || domain == "harmonista.org" || domain == "localhost" {
+				envDomain := os.Getenv("DOMAIN")
+				if envDomain == "" {
+					envDomain = "http://localhost"
+				}
+
+				baseDomain := strings.TrimPrefix(envDomain, "https://")
+				baseDomain = strings.TrimPrefix(baseDomain, "http://")
+				if strings.Contains(baseDomain, ":") {
+					baseDomain = strings.Split(baseDomain, ":")[0]
+				}
+
+				// Check if the request domain matches the configured base domain
+				if domain == baseDomain {
 					// Skip www, admin, api, mail, etc. - only handle blog subdomains
 					if possibleSubdomain != "www" && possibleSubdomain != "admin" &&
 						possibleSubdomain != "api" && possibleSubdomain != "mail" &&
@@ -81,15 +92,10 @@ func SubdomainMiddleware() gin.HandlerFunc {
 
 						// Rewrite the URL internally to /@/subdomain format
 						originalPath := c.Request.URL.Path
-						newPath := "/@/" + possibleSubdomain + originalPath
+						newPath := envDomain + "/@/" + possibleSubdomain + originalPath
 
-						// Set the new path
-						c.Request.URL.Path = newPath
+						c.Redirect(http.StatusFound, newPath)
 
-						// Set subdomain in context for blog routes to use
-						c.Set("subdomain", possibleSubdomain)
-						c.Set("is_subdomain_request", true)
-						c.Set("original_path", originalPath)
 					}
 				}
 			}
