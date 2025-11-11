@@ -58,21 +58,22 @@ func SubdomainMiddleware() gin.HandlerFunc {
 		host := c.Request.Host
 
 		// Remove port if present (for local development)
+		hostWithoutPort := host
 		if strings.Contains(host, ":") {
-			host = strings.Split(host, ":")[0]
+			hostWithoutPort = strings.Split(host, ":")[0]
 		}
 
 		// Check if this is a subdomain request
-		if strings.Contains(host, ".") {
-			parts := strings.Split(host, ".")
+		if strings.Contains(hostWithoutPort, ".") {
+			parts := strings.Split(hostWithoutPort, ".")
 
-			// Check if it's a subdomain of harmonista.com or localhost
+			// Check if it's a subdomain of harmonista.com, harmonista.org or localhost
 			if len(parts) >= 2 {
 				possibleSubdomain := parts[0]
 				domain := strings.Join(parts[1:], ".")
 
-				// Only handle subdomains for harmonista.com or localhost
-				if domain == "harmonista.com" || domain == "localhost" {
+				// Only handle subdomains for harmonista.com, harmonista.org or localhost
+				if domain == "harmonista.com" || domain == "harmonista.org" || domain == "localhost" {
 					// Skip www, admin, api, mail, etc. - only handle blog subdomains
 					if possibleSubdomain != "www" && possibleSubdomain != "admin" &&
 						possibleSubdomain != "api" && possibleSubdomain != "mail" &&
