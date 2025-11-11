@@ -6,7 +6,23 @@
     <h2>Criar Novo Post</h2>
 </header>
 
+{{ if .replyTo }}
+<section style="background: #f0f0f0; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #007bff;">
+    <p><strong>Em resposta a:</strong>
+    {{ if .replyToBlog }}
+    <a href="/@/{{.replyToBlog.Subdomain}}/{{.replyTo.Slug}}" target="_blank">{{.replyTo.Title}}</a>
+    {{ else }}
+    <a href="/@/{{.blog.Subdomain}}/{{.replyTo.Slug}}" target="_blank">{{.replyTo.Title}}</a>
+    {{ end }}
+    </p>
+</section>
+{{ end }}
+
 <form action="/admin/{{.subdomain}}/post/salvar" method="POST">
+    {{ if .replyTo }}
+    <input type="hidden" name="reply_to_id" value="{{.replyTo.ID}}">
+    {{ end }}
+
     <label for="title" class="width">
         Título
         <input type="text" id="title" name="title" required>

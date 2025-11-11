@@ -25,15 +25,17 @@ type Blog struct {
 }
 
 type Post struct {
-	ID        uint       `gorm:"primary_key"`
-	BlogID    int        `gorm:"not null;index" json:"blog_id"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `sql:"index" json:"deleted_at,omitempty"`
-	Title     string     `gorm:"not null" json:"title"`
-	Slug      string     `gorm:"not null;index" json:"slug"`
-	Content   string     `gorm:"type:text" json:"content"`
-	Draft     bool       `json:"draft"`
+	ID          uint       `gorm:"primary_key"`
+	BlogID      int        `gorm:"not null;index" json:"blog_id"`
+	Blog        Blog       `gorm:"foreignKey:BlogID" json:"blog"`        // relação com Blog
+	ReplyPostID *int       `gorm:"index" json:"reply_post_id,omitempty"` // ID do post pai (quando for uma resposta)
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `sql:"index" json:"deleted_at,omitempty"`
+	Title       string     `gorm:"not null" json:"title"`
+	Slug        string     `gorm:"not null;index" json:"slug"`
+	Content     string     `gorm:"type:text" json:"content"`
+	Draft       bool       `json:"draft"`
 }
 
 type Page struct {

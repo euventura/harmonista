@@ -1,15 +1,18 @@
 package backoffice
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"harmonista/cache"
 	"harmonista/models"
 )
 
@@ -30,6 +33,8 @@ func (b *BackofficeModule) RegisterRoutes(router *gin.Engine) {
 		backofficeGroup.POST("/toggle-list-reader/:blogID", b.requireBackofficeAuth, b.toggleListReader)
 		backofficeGroup.POST("/toggle-adult/:blogID", b.requireBackofficeAuth, b.toggleAdult)
 		backofficeGroup.POST("/validate-user/:userID", b.requireBackofficeAuth, b.validateUser)
+		backofficeGroup.POST("/clear-cache/:blogID", b.requireBackofficeAuth, b.clearBlogCache)
+		backofficeGroup.POST("/create-blog/:userID", b.requireBackofficeAuth, b.createBlog)
 		backofficeGroup.GET("/logout", b.logout)
 	}
 }
@@ -231,6 +236,72 @@ func (b *BackofficeModule) logout(c *gin.Context) {
 	session.Save()
 
 	c.Redirect(http.StatusFound, "/$/login")
+}
+
+// clearBlogCache limpa todo o cache de um blog
+func (b *BackofficeModule) clearBlogCache(c *gin.Context) {
+	blogID := c.Param("blogID")
+
+	var blog models.Blog
+	if err := b.db.First(&blog, blogID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Blog não encontrado"})
+		return
+	}
+
+	// Limpar todo o cache do blog
+	if err := cache.ClearAllBlogCache(blog.Subdomain); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao limpar cache: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Cache limpo com sucesso",
+	})
+}
+
+// createBlog cria um novo blog para o usuário especificado com título e subdomain baseados em timestamp
+func (b *BackofficeModule) createBlog(c *gin.Context) {
+	userID := c.Param("userID")
+
+	var user models.User
+	if err := b.db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
+		return
+	}
+
+	// Gerar timestamp como base para título e subdomain
+	timestamp := time.Now().Unix()
+	subdomain := fmt.Sprintf("blog%d", timestamp)
+	title := fmt.Sprintf("Blog %d", timestamp)
+
+	// Verificar se subdomain já existe (extremamente improvável, mas por segurança)
+	var existingBlog models.Blog
+	if err := b.db.Where("subdomain = ?", subdomain).First(&existingBlog).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Subdomain já existe"})
+		return
+	}
+
+	// Criar o novo blog
+	blog := models.Blog{
+		UserID:      user.ID,
+		Title:       title,
+		Description: "",
+		Subdomain:   subdomain,
+	}
+
+	if err := b.db.Create(&blog).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao criar blog: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"message":   "Blog criado com sucesso",
+		"subdomain": subdomain,
+		"title":     title,
+		"blogID":    blog.ID,
+	})
 }
 
 // checkPasswordHash verifica se a senha corresponde ao hash

@@ -75,8 +75,8 @@ func main() {
 	// Add subdomain middleware
 	router.Use(common.SubdomainMiddleware())
 
-	// Add cache middleware
-	router.Use(cache.Middleware())
+	// Add cache middleware for blog posts (24 hour cache)
+	router.Use(cache.CacheMiddleware(24 * time.Hour))
 
 	router.SetFuncMap(map[string]interface{}{
 		"now": func() time.Time {

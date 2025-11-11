@@ -1,136 +1,153 @@
 package cache
 
 import (
-	"crypto/sha256"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"gorm.io/gorm"
+	"harmonista/models"
 )
 
-const baseCacheDir = "./cache"
-
-// GenerateCacheKey cria uma chave de cache baseada no subdomínio e path
-func GenerateCacheKey(subdomain, path string) string {
-	// Normalizar o path
-	if path == "" || path == "/" {
-		path = "index"
-	}
-
-	// Remover barra inicial
-	path = strings.TrimPrefix(path, "/")
-
-	// Substituir caracteres problemáticos para nomes de arquivo
-	path = strings.ReplaceAll(path, "/", "_")
-
-	// Criar hash para evitar nomes muito longos
-	hash := sha256.Sum256([]byte(path))
-	filename := fmt.Sprintf("%s_%x.html", path, hash[:8])
-
-	return filename
+// GetCachePath returns the cache file path for a blog post
+func GetCachePath(subdomain, slug string) string {
+	hash := generateHash(subdomain + slug)
+	shortHash := hash[:16]
+	cacheDir := filepath.Join("cache", subdomain)
+	return filepath.Join(cacheDir, fmt.Sprintf("%s_%s.html", slug, shortHash))
 }
 
-// GetCachePath retorna o caminho completo do arquivo de cache
-func GetCachePath(subdomain, path string) string {
-	blogCacheDir := filepath.Join(baseCacheDir, subdomain)
-	filename := GenerateCacheKey(subdomain, path)
-	return filepath.Join(blogCacheDir, filename)
+// generateHash generates an MD5 hash for the given string
+func generateHash(s string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(s))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-// GetCacheDir retorna o diretório de cache do blog
-func GetCacheDir(subdomain string) string {
-	return filepath.Join(baseCacheDir, subdomain)
+// EnsureCacheDir ensures the cache directory exists
+func EnsureCacheDir(subdomain string) error {
+	cacheDir := filepath.Join("cache", subdomain)
+	return os.MkdirAll(cacheDir, 0755)
 }
 
-// Exists verifica se o cache existe
-func Exists(subdomain, path string) bool {
-	cachePath := GetCachePath(subdomain, path)
-	_, err := os.Stat(cachePath)
-	return err == nil
-}
-
-// Read lê o conteúdo do cache
-func Read(subdomain, path string) ([]byte, error) {
-	cachePath := GetCachePath(subdomain, path)
-	return ioutil.ReadFile(cachePath)
-}
-
-// Write salva o conteúdo no cache
-func Write(subdomain, path string, content []byte) error {
-	blogCacheDir := GetCacheDir(subdomain)
-
-	// Criar diretório do blog se não existir
-	if err := os.MkdirAll(blogCacheDir, 0755); err != nil {
-		return fmt.Errorf("failed to create cache directory: %w", err)
-	}
-
-	cachePath := GetCachePath(subdomain, path)
-
-	// Salvar o arquivo
-	if err := ioutil.WriteFile(cachePath, content, 0644); err != nil {
-		return fmt.Errorf("failed to write cache file: %w", err)
-	}
-
-	log.Printf("Cache written: %s", cachePath)
-	return nil
-}
-
-// Delete deleta um arquivo de cache específico
-func Delete(subdomain, path string) error {
-	cachePath := GetCachePath(subdomain, path)
-
-	if !Exists(subdomain, path) {
-		// Arquivo não existe, não é um erro
-		return nil
-	}
-
-	if err := os.Remove(cachePath); err != nil {
-		return fmt.Errorf("failed to delete cache file: %w", err)
-	}
-
-	log.Printf("Cache deleted: %s", cachePath)
-	return nil
-}
-
-// DeleteAll deleta todo o cache de um blog
-func DeleteAll(subdomain string) error {
-	blogCacheDir := GetCacheDir(subdomain)
-
-	// Verificar se o diretório existe
-	if _, err := os.Stat(blogCacheDir); os.IsNotExist(err) {
-		// Diretório não existe, não é um erro
-		return nil
-	}
-
-	// Remover todo o diretório do blog
-	if err := os.RemoveAll(blogCacheDir); err != nil {
-		return fmt.Errorf("failed to delete blog cache: %w", err)
-	}
-
-	log.Printf("All cache deleted for blog: %s", subdomain)
-	return nil
-}
-
-// DeletePostCache deleta o cache de um post específico
-func DeletePostCache(subdomain, postSlug string) error {
-	// Deletar cache do post individual
-	if err := Delete(subdomain, "/"+postSlug); err != nil {
+// WriteCache writes HTML content to cache file
+func WriteCache(subdomain, slug, html string) error {
+	if err := EnsureCacheDir(subdomain); err != nil {
 		return err
 	}
 
-	// Deletar também o cache da página inicial (já que lista os posts)
-	if err := Delete(subdomain, "/"); err != nil {
-		return err
+	cachePath := GetCachePath(subdomain, slug)
+	return ioutil.WriteFile(cachePath, []byte(html), 0644)
+}
+
+// ReadCache reads HTML content from cache file if it exists and is not expired
+func ReadCache(subdomain, slug string, maxAge time.Duration) (string, bool) {
+	cachePath := GetCachePath(subdomain, slug)
+
+	info, err := os.Stat(cachePath)
+	if err != nil {
+		return "", false
 	}
 
-	log.Printf("Post cache deleted: %s/%s", subdomain, postSlug)
+	// Check if cache is expired
+	if time.Since(info.ModTime()) > maxAge {
+		return "", false
+	}
+
+	content, err := ioutil.ReadFile(cachePath)
+	if err != nil {
+		return "", false
+	}
+
+	return string(content), true
+}
+
+// ClearCache removes a specific cache file
+func ClearCache(subdomain, slug string) error {
+	cachePath := GetCachePath(subdomain, slug)
+	err := os.Remove(cachePath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
 	return nil
 }
 
-// DeletePageCache deleta o cache de uma página específica
-func DeletePageCache(subdomain, pageSlug string) error {
-	// Deletar cache da página individual
-	return Delete(subdomain, "/p/"+pageSlug)
+// ClearCacheByPostID removes cache for a post by its ID
+// This looks up the blog subdomain and post slug from the database
+func ClearCacheByPostID(db *gorm.DB, postID int) error {
+	var post models.Post
+	if err := db.Preload("Blog").First(&post, postID).Error; err != nil {
+		// If post not found, it's ok - nothing to clear
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+		return err
+	}
+
+	return ClearCache(post.Blog.Subdomain, post.Slug)
+}
+
+// ClearCacheBySlugs removes cache files matching a glob pattern in subdomain directory
+func ClearCacheBySlugs(subdomain string, slugs ...string) error {
+	cacheDir := filepath.Join("cache", subdomain)
+
+	for _, slug := range slugs {
+		// Remove exact match
+		if err := ClearCache(subdomain, slug); err != nil {
+			return err
+		}
+
+		// Also try to remove any files starting with this slug
+		// This handles cases where slug might have changed
+		pattern := filepath.Join(cacheDir, slug+"_*.html")
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			continue
+		}
+
+		for _, match := range matches {
+			os.Remove(match)
+		}
+	}
+
+	return nil
+}
+
+// ClearAllBlogCache removes all cache files for a blog
+func ClearAllBlogCache(subdomain string) error {
+	cacheDir := filepath.Join("cache", subdomain)
+	return os.RemoveAll(cacheDir)
+}
+
+// ClearOldCache removes cache files older than the specified duration
+func ClearOldCache(maxAge time.Duration) error {
+	cacheRoot := "cache"
+
+	return filepath.Walk(cacheRoot, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Skip non-HTML files
+		if !strings.HasSuffix(path, ".html") {
+			return nil
+		}
+
+		// Remove if older than maxAge
+		if time.Since(info.ModTime()) > maxAge {
+			os.Remove(path)
+		}
+
+		return nil
+	})
 }
