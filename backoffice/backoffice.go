@@ -242,25 +242,9 @@ func (b *BackofficeModule) logout(c *gin.Context) {
 func (b *BackofficeModule) clearBlogCache(c *gin.Context) {
 	blogID := c.Param("blogID")
 
-	// Obter usuário autenticado do contexto
-	backofficeUser, exists := c.Get("backoffice_user")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Usuário não autenticado"})
-		return
-	}
-	user := backofficeUser.(models.User)
-
 	var blog models.Blog
 	if err := b.db.First(&blog, blogID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Blog não encontrado"})
-		return
-	}
-
-	// Verificar autorização: usuário deve ser dono do blog ou admin do backoffice
-	// Nota: todos os usuários que chegam aqui já são admins do backoffice (verificado pelo middleware requireBackofficeAuth)
-	// mas verificamos a propriedade do blog como camada adicional de segurança
-	if blog.UserID != user.ID && !b.isBackofficeEmail(user.Email) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Sem permissão para limpar o cache deste blog"})
 		return
 	}
 
