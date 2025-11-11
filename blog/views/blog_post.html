@@ -5,7 +5,16 @@
     <header>
         <h2>{{ .post.Title }}</h2>
         <date>{{ .post.CreatedAt.Format "02/01/2006" }}</date>
+
     </header>
+
+    {{ if .replyTo }}
+    <section>
+
+        <p><small>Em resposta a: <a href="{{ .replyTo.URL }}">{{ .replyTo.Title }}</a></small></p>
+    </section>
+    <br>
+    {{ end }}
 
     {{ .post.Content }}
 
@@ -14,6 +23,27 @@
         <a href="/@/{{ $.blog.Subdomain }}/t/{{ .Title }}">{{ .Title }}</a>
         {{ end }}
     </section>
+
+    <section class="blog-post-actions">
+        <form action="/admin/responder" method="POST"  class="reply-form">
+            <input type="hidden" name="post_id" value="{{ .post.ID }}">
+            <button type="submit" class="reply-button">Responder</button>
+        </form>
+    </section>
+
+    {{ if .replies }}
+    <section class="reply-posts">
+        <h5>Respostas</h5>
+        <ul class="post-list">
+            {{ range .replies }}
+            <li class="post-list-item">
+                <a href="{{ .URL }}">{{ .Title }}</a>
+                <small>({{ .CreatedAt.Format "02/01/2006" }})</small>
+            </li>
+            {{ end }}
+        </ul>
+    </section>
+    {{ end }}
 </section>
 
 {{ template "blog_footer.html" .}}

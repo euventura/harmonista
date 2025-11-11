@@ -2,111 +2,129 @@ package cache
 
 import (
 	"bytes"
-	"log"
 	"net/http"
-	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// responseWriter é um wrapper para capturar o HTML gerado
 type responseWriter struct {
 	gin.ResponseWriter
 	body *bytes.Buffer
 }
 
-func (w *responseWriter) Write(data []byte) (int, error) {
-	w.body.Write(data)
-	return w.ResponseWriter.Write(data)
+func (w *responseWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
 }
 
-// Middleware intercepta requisições e serve do cache se disponível
-func Middleware() gin.HandlerFunc {
+// CacheMiddleware is a middleware that caches blog post pages
+func CacheMiddleware(maxAge time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Apenas processar requisições GET
-		if c.Request.Method != http.MethodGet {
+		// Only cache GET requests
+		if c.Request.Method != "GET" {
 			c.Next()
 			return
 		}
 
-		// Verificar se é uma rota de blog (não admin, não login, etc)
+		// Only cache blog post pages (/@/subdomain/slug)
 		path := c.Request.URL.Path
-		if strings.HasPrefix(path, "/admin") ||
-			strings.HasPrefix(path, "/login") ||
-			strings.HasPrefix(path, "/cadastrar") ||
-			strings.HasPrefix(path, "/confirmar") ||
-			strings.HasPrefix(path, "/public") {
+		if !isBlogPostPath(path) {
 			c.Next()
 			return
 		}
 
-		// Extrair subdomínio
-		subdomain := c.Param("subdomain")
-		if subdomain == "" {
-			// Tentar pegar do contexto (caso tenha sido setado pelo SubdomainMiddleware)
-			subdomainVal, exists := c.Get("subdomain")
-			if exists {
-				subdomain = subdomainVal.(string)
-			}
-		}
-
-		// Se não tem subdomínio, não é uma rota de blog
-		if subdomain == "" {
+		// Extract subdomain and slug from path
+		subdomain, slug := extractFromPath(path)
+		if subdomain == "" || slug == "" {
 			c.Next()
 			return
 		}
 
-		// Ignorar parâmetros de preview CSS
-		if c.Query("css") != "" {
-			c.Next()
+		// Try to read from cache
+		if cached, found := ReadCache(subdomain, slug, maxAge); found {
+			c.Header("X-Cache", "HIT")
+			c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(cached))
+			c.Abort()
 			return
 		}
 
-		// Construir path para o cache
-		cachePath := path
-		// Remover prefixo /@/subdomain se existir
-		cachePath = strings.TrimPrefix(cachePath, "/@/"+subdomain)
-		// Se estiver vazio, é a página inicial
-		if cachePath == "" || cachePath == "/" {
-			cachePath = "/"
-		}
+		// Cache miss - capture response
+		c.Header("X-Cache", "MISS")
 
-		// Tentar ler do cache
-		if Exists(subdomain, cachePath) {
-			cachedContent, err := Read(subdomain, cachePath)
-			if err == nil {
-				log.Printf("Cache HIT: %s%s", subdomain, cachePath)
-				c.Data(http.StatusOK, "text/html; charset=utf-8", cachedContent)
-				c.Abort()
-				return
-			}
-			log.Printf("Cache read error: %v", err)
-		}
-
-		log.Printf("Cache MISS: %s%s", subdomain, cachePath)
-
-		// Criar wrapper para capturar o HTML gerado
+		// Create custom writer to capture response
 		writer := &responseWriter{
 			ResponseWriter: c.Writer,
-			body:           &bytes.Buffer{},
+			body:           bytes.NewBuffer(nil),
 		}
 		c.Writer = writer
 
-		// Armazenar info no contexto para uso posterior
-		c.Set("cache_subdomain", subdomain)
-		c.Set("cache_path", cachePath)
-		c.Set("cache_writer", writer)
-
 		c.Next()
 
-		// Após o controller processar, salvar no cache se for HTML
-		if c.Writer.Status() == http.StatusOK {
-			contentType := c.Writer.Header().Get("Content-Type")
-			if strings.Contains(contentType, "text/html") && writer.body.Len() > 0 {
-				if err := Write(subdomain, cachePath, writer.body.Bytes()); err != nil {
-					log.Printf("Failed to write cache: %v", err)
-				}
-			}
+		// Only cache successful HTML responses
+		if c.Writer.Status() == http.StatusOK &&
+			c.Writer.Header().Get("Content-Type") == "text/html; charset=utf-8" {
+			WriteCache(subdomain, slug, writer.body.String())
 		}
 	}
+}
+
+// isBlogPostPath checks if the path is a blog post path (/@/subdomain/slug)
+func isBlogPostPath(path string) bool {
+	// /@/subdomain/postslug or subdomain.domain/postslug
+	// We'll detect based on the number of slashes
+	// /@/subdomain/slug has 3 parts when split by /
+	// Skip if it's an index, page, or tag route
+	if len(path) < 4 || path[len(path)-1] == '/' {
+		return false
+	}
+
+	// Skip /p/ (pages) and /t/ (tags)
+	if bytes.Contains([]byte(path), []byte("/p/")) ||
+		bytes.Contains([]byte(path), []byte("/t/")) {
+		return false
+	}
+
+	return true
+}
+
+// extractFromPath extracts subdomain and slug from path
+// For /@/subdomain/slug format
+func extractFromPath(path string) (subdomain, slug string) {
+	// Remove leading slash
+	if len(path) > 0 && path[0] == '/' {
+		path = path[1:]
+	}
+
+	// Split by /
+	parts := splitPath(path)
+
+	// /@/subdomain/slug format
+	if len(parts) >= 3 && parts[0] == "@" {
+		return parts[1], parts[2]
+	}
+
+	return "", ""
+}
+
+func splitPath(path string) []string {
+	var parts []string
+	var current string
+
+	for _, ch := range path {
+		if ch == '/' {
+			if current != "" {
+				parts = append(parts, current)
+				current = ""
+			}
+		} else {
+			current += string(ch)
+		}
+	}
+
+	if current != "" {
+		parts = append(parts, current)
+	}
+
+	return parts
 }

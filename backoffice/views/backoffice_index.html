@@ -75,6 +75,7 @@
                     <th>List Reader</th>
                     <th>Adult</th>
                     <th>Ações</th>
+                    <th>+ Blog</th>
                 </tr>
             </thead>
             <tbody>
@@ -116,7 +117,15 @@
                                 Validar Email
                             </button>
                             {{end}}
+                            <button onclick="clearCache({{.Blog.ID}})" style="background-color: #dc3545; color: white;">
+                                Limpar Cache
+                            </button>
                         </div>
+                    </td>
+                    <td>
+                        <button onclick="createBlog({{.Blog.User.ID}})" style="background-color: #28a745; color: white;">
+                            + Blog
+                        </button>
                     </td>
                 </tr>
                 {{end}}
@@ -202,6 +211,58 @@ function validateUser(userID, blogID) {
     .catch(error => {
         console.error('Erro:', error);
         alert('Erro ao validar usuário');
+    });
+}
+
+function clearCache(blogID) {
+    if (!confirm('Tem certeza que deseja limpar todo o cache deste blog?')) {
+        return;
+    }
+
+    fetch('/$/clear-cache/' + blogID, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Cache limpo com sucesso!');
+        } else {
+            alert('Erro ao limpar cache: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao limpar cache');
+    });
+}
+
+function createBlog(userID) {
+    if (!confirm('Criar um novo blog para este usuário?')) {
+        return;
+    }
+
+    fetch('/$/create-blog/' + userID, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Blog criado com sucesso!\nSubdomínio: ' + data.subdomain);
+            // Recarregar página para mostrar novo blog
+            window.location.reload();
+        } else {
+            alert('Erro ao criar blog: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao criar blog');
     });
 }
 </script>

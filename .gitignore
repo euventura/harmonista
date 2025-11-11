@@ -10,6 +10,7 @@ bin/
 dist/
 build/
 cache/*
+cache/
 .env
 *.env
 *.local

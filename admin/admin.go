@@ -3,6 +3,7 @@ package admin
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -42,6 +43,7 @@ func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
 	router.POST("/cadastro", a.cadastroPost)
 	router.GET("/confirmar/:token", a.confirmEmail)
 	router.GET("/admin", a.adminRoot)
+	router.POST("/admin/responder", a.replyIntent)
 
 	adminGroup := router.Group("/admin/:subdomain")
 	adminGroup.Use(a.requireAuth, a.loadBlog)
@@ -77,6 +79,49 @@ func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
 	router.GET("/admin/dashboard", a.requireAuth, a.dashboard)
 	router.GET("/admin/logout", a.logout)
 
+}
+
+// replyIntent salva a intenção de responder um post na sessão e redireciona apropriadamente
+func (a *AdminModule) replyIntent(c *gin.Context) {
+	postIDStr := c.PostForm("post_id")
+
+	if postIDStr == "" {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
+
+	postID, err := strconv.Atoi(postIDStr)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
+
+	// Salvar intenção na sessão
+	session := sessions.Default(c)
+	session.Set("reply_intent_post_id", postID)
+	session.Save()
+
+	// Verificar se usuário está logado
+	userID := session.Get("user_id")
+
+	if userID == nil {
+		// Não está logado - redirecionar para login
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Está logado - buscar blog do usuário e redirecionar
+	var userBlog models.Blog
+	if err := a.db.Where("user_id = ?", userID).First(&userBlog).Error; err != nil {
+		c.Redirect(http.StatusFound, "/admin/dashboard")
+		return
+	}
+
+	// Limpar a intenção da sessão e redirecionar para criar post
+	session.Delete("reply_intent_post_id")
+	session.Save()
+
+	c.Redirect(http.StatusFound, fmt.Sprintf("/admin/%s/post/novo?reply_to=%d", userBlog.Subdomain, postID))
 }
 
 func (a *AdminModule) requireAuth(c *gin.Context) {
@@ -172,6 +217,26 @@ func (a *AdminModule) loginPost(c *gin.Context) {
 
 	session := sessions.Default(c)
 	session.Set("user_id", user.ID)
+
+	// Verificar se há uma intenção de resposta salva na sessão
+	replyIntentPostID := session.Get("reply_intent_post_id")
+
+	if replyIntentPostID != nil {
+		// Buscar o blog do usuário
+		var userBlog models.Blog
+		if err := a.db.Where("user_id = ?", user.ID).First(&userBlog).Error; err == nil {
+			// Limpar a intenção da sessão
+			session.Delete("reply_intent_post_id")
+			session.Delete("reply_intent_blog_subdomain")
+			session.Delete("reply_intent_post_title")
+			session.Save()
+
+			// Redirecionar para criar resposta
+			c.Redirect(http.StatusFound, fmt.Sprintf("/admin/%s/post/novo?reply_to=%v", userBlog.Subdomain, replyIntentPostID))
+			return
+		}
+	}
+
 	session.Save()
 
 	c.Redirect(http.StatusFound, "/admin/dashboard")
@@ -393,11 +458,6 @@ func (a *AdminModule) saveTheme(c *gin.Context) {
 		return
 	}
 
-	// Invalidar todo o cache do blog (tema afeta todas as páginas)
-	if err := cache.DeleteAll(blog.Subdomain); err != nil {
-		log.Printf("Failed to invalidate blog cache: %v", err)
-	}
-
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/tema")
 }
 
@@ -428,11 +488,6 @@ func (a *AdminModule) applyTheme(c *gin.Context) {
 	if err := a.db.Save(blog).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar tema"})
 		return
-	}
-
-	// Invalidar todo o cache do blog (tema afeta todas as páginas)
-	if err := cache.DeleteAll(blog.Subdomain); err != nil {
-		log.Printf("Failed to invalidate blog cache: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Tema aplicado com sucesso"})
@@ -482,11 +537,6 @@ func (a *AdminModule) updateMenu(c *gin.Context) {
 		return
 	}
 
-	// Invalidar todo o cache do blog (menu afeta todas as páginas)
-	if err := cache.DeleteAll(blog.Subdomain); err != nil {
-		log.Printf("Failed to invalidate blog cache: %v", err)
-	}
-
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/menu")
 }
 
@@ -526,7 +576,6 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 	isListReader := c.PostForm("IsListReader") == "1"
 
 	// Validate subdomain change if different
-	oldSubdomain := blog.Subdomain
 	if newSubdomain != blog.Subdomain {
 		var existingBlog models.Blog
 		if err := a.db.Where("subdomain = ?", newSubdomain).First(&existingBlog).Error; err == nil {
@@ -549,17 +598,6 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 			"blog":  blog,
 		})
 		return
-	}
-
-	// Invalidar cache do blog antigo (se mudou subdomínio)
-	if oldSubdomain != newSubdomain {
-		if err := cache.DeleteAll(oldSubdomain); err != nil {
-			log.Printf("Failed to invalidate old blog cache: %v", err)
-		}
-	}
-	// Invalidar todo o cache do blog (configurações afetam todas as páginas)
-	if err := cache.DeleteAll(blog.Subdomain); err != nil {
-		log.Printf("Failed to invalidate blog cache: %v", err)
 	}
 
 	// Update password if provided
@@ -635,11 +673,6 @@ func (a *AdminModule) updateBlogSettings(c *gin.Context) {
 		return
 	}
 
-	// Invalidar todo o cache do blog (título e descrição afetam todas as páginas)
-	if err := cache.DeleteAll(blog.Subdomain); err != nil {
-		log.Printf("Failed to invalidate blog cache: %v", err)
-	}
-
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/")
 }
 
@@ -666,11 +699,31 @@ func (a *AdminModule) listPosts(c *gin.Context) {
 
 func (a *AdminModule) newPost(c *gin.Context) {
 	subdomain := c.Param("subdomain")
-	blog, _ := c.Get("blog")
+	blogData, _ := c.Get("blog")
+	blog := blogData.(*models.Blog)
+
+	// Verificar se é uma resposta a outro post (pode ser de qualquer blog)
+	replyToID := c.Query("reply_to")
+	var replyToPost *models.Post
+	var replyToBlog *models.Blog
+	if replyToID != "" {
+		var parentPost models.Post
+		// Buscar o post sem restrição de blog_id pois pode responder qualquer post
+		if err := a.db.Where("id = ? AND draft = ?", replyToID, false).First(&parentPost).Error; err == nil {
+			replyToPost = &parentPost
+			// Buscar o blog do post pai para exibir informações completas
+			var parentBlog models.Blog
+			if err := a.db.Where("id = ?", parentPost.BlogID).First(&parentBlog).Error; err == nil {
+				replyToBlog = &parentBlog
+			}
+		}
+	}
 
 	c.HTML(http.StatusOK, "admin_new_post.html", gin.H{
-		"subdomain": subdomain,
-		"blog":      blog,
+		"subdomain":   subdomain,
+		"blog":        blog,
+		"replyTo":     replyToPost,
+		"replyToBlog": replyToBlog,
 	})
 }
 
@@ -683,6 +736,7 @@ func (a *AdminModule) savePost(c *gin.Context) {
 	content := c.PostForm("content")
 	tags := c.PostForm("tags")
 	action := c.PostForm("action")
+	replyToIDStr := c.PostForm("reply_to_id")
 
 	slug := generateSlug(title)
 	draft := action == "save_draft"
@@ -697,12 +751,29 @@ func (a *AdminModule) savePost(c *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 
+	// Se for uma resposta, adicionar o reply_post_id
+	if replyToIDStr != "" {
+		replyToID, err := strconv.Atoi(replyToIDStr)
+		if err == nil {
+			post.ReplyPostID = &replyToID
+		}
+	}
+
 	if err := a.db.Create(&post).Error; err != nil {
 		c.HTML(http.StatusInternalServerError, "admin_error.html", gin.H{
 			"error": "Erro ao criar post",
 			"blog":  blog,
 		})
 		return
+	}
+
+	// Se for uma resposta, limpar cache do post pai
+	if replyToIDStr != "" {
+		if replyToID, err := strconv.Atoi(replyToIDStr); err == nil {
+			if err := cache.ClearCacheByPostID(a.db, replyToID); err != nil {
+				log.Printf("Erro ao limpar cache do post %d: %v", replyToID, err)
+			}
+		}
 	}
 
 	if tags != "" {
@@ -712,13 +783,6 @@ func (a *AdminModule) savePost(c *gin.Context) {
 				"blog":  blog,
 			})
 			return
-		}
-	}
-
-	// Se publicou, invalidar cache da index
-	if !draft {
-		if err := cache.Delete(blog.Subdomain, "/"); err != nil {
-			log.Printf("Failed to invalidate index cache: %v", err)
 		}
 	}
 
@@ -823,12 +887,30 @@ func (a *AdminModule) editPost(c *gin.Context) {
 		visitCount = a.analytics.GetPostVisitCount(postIDInt)
 	}
 
+	// Buscar post pai se for uma resposta (pode ser de qualquer blog)
+	var replyToPost *models.Post
+	var replyToBlog *models.Blog
+	if post.ReplyPostID != nil {
+		var parentPost models.Post
+		// Buscar sem restrição de blog_id
+		if err := a.db.Where("id = ?", *post.ReplyPostID).First(&parentPost).Error; err == nil {
+			replyToPost = &parentPost
+			// Buscar o blog do post pai
+			var parentBlog models.Blog
+			if err := a.db.Where("id = ?", parentPost.BlogID).First(&parentBlog).Error; err == nil {
+				replyToBlog = &parentBlog
+			}
+		}
+	}
+
 	c.HTML(http.StatusOK, "admin_edit_post.html", gin.H{
-		"subdomain":  subdomain,
-		"post":       post,
-		"blog":       blog,
-		"tags":       tags,
-		"visitCount": visitCount,
+		"subdomain":   subdomain,
+		"post":        post,
+		"blog":        blog,
+		"tags":        tags,
+		"visitCount":  visitCount,
+		"replyTo":     replyToPost,
+		"replyToBlog": replyToBlog,
 	})
 }
 
@@ -872,6 +954,18 @@ func (a *AdminModule) updatePost(c *gin.Context) {
 		return
 	}
 
+	// Limpar cache do próprio post
+	if err := cache.ClearCache(blog.Subdomain, post.Slug); err != nil {
+		log.Printf("Erro ao limpar cache do post %d: %v", post.ID, err)
+	}
+
+	// Se for uma resposta, limpar cache do post pai também
+	if post.ReplyPostID != nil {
+		if err := cache.ClearCacheByPostID(a.db, *post.ReplyPostID); err != nil {
+			log.Printf("Erro ao limpar cache do post pai %d: %v", *post.ReplyPostID, err)
+		}
+	}
+
 	if tags != "" {
 		if err := a.processPostTags(blog.ID, int(post.ID), tags); err != nil {
 			c.HTML(http.StatusInternalServerError, "admin_error.html", gin.H{
@@ -880,11 +974,6 @@ func (a *AdminModule) updatePost(c *gin.Context) {
 			})
 			return
 		}
-	}
-
-	// Invalidar cache do post
-	if err := cache.DeletePostCache(blog.Subdomain, post.Slug); err != nil {
-		log.Printf("Failed to invalidate post cache: %v", err)
 	}
 
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/posts")
@@ -917,11 +1006,6 @@ func (a *AdminModule) deletePost(c *gin.Context) {
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post não encontrado"})
 		return
-	}
-
-	// Invalidar cache do post
-	if err := cache.DeletePostCache(blog.Subdomain, post.Slug); err != nil {
-		log.Printf("Failed to invalidate post cache: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Post deletado com sucesso"})
@@ -1123,11 +1207,6 @@ func (a *AdminModule) updatePage(c *gin.Context) {
 		return
 	}
 
-	// Invalidar cache da página
-	if err := cache.DeletePageCache(blog.Subdomain, page.Slug); err != nil {
-		log.Printf("Failed to invalidate page cache: %v", err)
-	}
-
 	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/pages")
 }
 
@@ -1158,11 +1237,6 @@ func (a *AdminModule) deletePage(c *gin.Context) {
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Página não encontrada"})
 		return
-	}
-
-	// Invalidar cache da página
-	if err := cache.DeletePageCache(blog.Subdomain, page.Slug); err != nil {
-		log.Printf("Failed to invalidate page cache: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Página deletada com sucesso"})

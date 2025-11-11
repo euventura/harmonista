@@ -300,7 +300,6 @@ func (b *BlogModule) post(c *gin.Context) {
 		return
 	}
 
-	// Track visit to specific post
 	postID := int(post.ID)
 	if b.analytics != nil {
 		b.analytics.TrackVisit(c, blog.ID, &postID)
@@ -313,28 +312,70 @@ func (b *BlogModule) post(c *gin.Context) {
 		Where("post_tags.post_id = ?", post.ID).
 		Find(&tags)
 
+	var replyToPost *models.Post
+	if post.ReplyPostID != nil {
+		var parentPost models.Post
+		if err := b.db.Preload("Blog").
+			Where("id = ? AND draft = ?", *post.ReplyPostID, false).
+			First(&parentPost).Error; err == nil {
+			replyToPost = &parentPost
+		}
+	}
+
+	// Buscar respostas a este post
+	var replies []models.Post
+	b.db.Preload("Blog").
+		Where("reply_post_id = ? AND draft = ?", post.ID, false).
+		Order("created_at ASC").
+		Find(&replies)
+
 	contentHTML := template.HTML(renderMarkdown(post.Content))
 
 	navLinks := parseNavLinks(blog.Nav)
-
-	// Suporte para parâmetro ?css=<path>
 	previewCSS := c.Query("css")
-
-	// Build URLs based on request type (subdomain or /@/subdomain)
 	postURL := buildBlogURL(c, blog, "/"+post.Slug)
 	blogURL := buildBlogURL(c, blog, "")
 
+	postData := gin.H{
+		"ID":        post.ID,
+		"Title":     post.Title,
+		"Slug":      post.Slug,
+		"Content":   contentHTML,
+		"CreatedAt": post.CreatedAt,
+		"UpdatedAt": post.UpdatedAt,
+	}
+
+	var replyToData gin.H
+	if replyToPost != nil {
+		replyToURL := buildBlogURL(c, &replyToPost.Blog, "/"+replyToPost.Slug)
+		replyToData = gin.H{
+			"Title": replyToPost.Title,
+			"Slug":  replyToPost.Slug,
+			"URL":   replyToURL,
+		}
+	}
+
+	// Preparar dados das respostas
+	var repliesData []gin.H
+	for _, reply := range replies {
+		replyURL := buildBlogURL(c, &reply.Blog, "/"+reply.Slug)
+		repliesData = append(repliesData, gin.H{
+			"ID":        reply.ID,
+			"Title":     reply.Title,
+			"Slug":      reply.Slug,
+			"URL":       replyURL,
+			"CreatedAt": reply.CreatedAt,
+			"BlogTitle": reply.Blog.Title,
+			"Subdomain": reply.Blog.Subdomain,
+		})
+	}
+
 	c.HTML(http.StatusOK, "blog_post.html", gin.H{
-		"blog": blog,
-		"post": gin.H{
-			"ID":        post.ID,
-			"Title":     post.Title,
-			"Slug":      post.Slug,
-			"Content":   contentHTML,
-			"CreatedAt": post.CreatedAt,
-			"UpdatedAt": post.UpdatedAt,
-		},
+		"blog":         blog,
+		"post":         postData,
 		"tags":         tags,
+		"replyTo":      replyToData,
+		"replies":      repliesData,
 		"navLinks":     navLinks,
 		"previewCSS":   previewCSS,
 		"blogThemeCSS": template.CSS(blog.Theme),
