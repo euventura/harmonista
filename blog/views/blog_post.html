@@ -37,7 +37,7 @@
         <ul class="post-list">
             {{ range .replies }}
             <li class="post-list-item">
-                <a href="{{ .URL }}">{{ .Title }} rANGE</a>
+                <a href="{{ .URL }}">{{ .Title }}</a>
                 <small>({{ .CreatedAt.Format "02/01/2006" }})</small>
             </li>
             {{ end }}
