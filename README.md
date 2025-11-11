@@ -2,7 +2,7 @@
 
 Uma rede de publicação de texto minimalista para quem gosta de ler e escrever. Sem analytics, sem trackers, sem cookies. Apenas texto, conteúdo e silêncio.
 
-harmonista.org
+[harmonista.org](https://harmonista.org)
 
 ## Filosofia
 - Sem distrações, sem coleta de dados
