@@ -41,7 +41,7 @@ func (e *EmailService) SendVerificationEmail(to, token string) error {
 	subject := "⌐◯ᵔ◯ Confirme sua conta - Harmonista"
 	body := fmt.Sprintf(`Olá!
 
-Obrigado por se cadastrar no ⌐◯ᵔ◯ Harmonista.
+Obrigado por se cadastrar no harmonista ⌐◯ᵔ◯.
 
 Para confirmar seu email e ativar sua conta, clique no link abaixo:
 
