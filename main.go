@@ -165,7 +165,7 @@ func main() {
 		// Modo HTTP apenas (desenvolvimento)
 		port := os.Getenv("PORT")
 		if port == "" {
-			port = "80"
+			port = "8080"
 		}
 
 		log.Printf("Starting HTTP server on port %s (development mode)...", port)

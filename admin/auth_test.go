@@ -15,7 +15,7 @@ import (
 
 func TestAdminRoot_NotLoggedIn(t *testing.T) {
 	db := setupTestDB()
-	adminModule := NewAdminModule(db)
+	adminModule := NewAdminModule(db, nil)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()

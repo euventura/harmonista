@@ -1,32 +1,30 @@
 {{ template "site_header.html" .}}
 
 <section>
-    <h3>Olá!</h3>
-    <p>Está e uma micro plataforma para escrever <strong>texto</strong>. Uma relação saudável com a internet. Sem imagens, sem algoritimos, sem propaganda</p>
-    <h4>Um lugar para ler e ser lido</h4>
 
-    <ul>
-        <li>Sem publicidade</li>
-        <li>Sem trackers</li>
-        <li>Sem Javascript</li>
-        <li>Sem apelo visual</li>
-        <li>Sem estratégias para te viciar</li>
-    </ul>
-    <h5>Ler e escrever as suas ideias, pelas suas mãos e surpreenda-se</h5>
-    <ul>
-        <li><a href="/leia">Descubra leituras</a> - Empodere-se lendo outras pessoas<br /></li>
-        <li><a href="/cadastrar">Crie seu blog</a> - Comece se expressar</li>
-    </ul>
-    <h4>Sempre gratuito</h4>
-    <p>Feito para ser simples e leve e com <a href="https://github.com/euventura/hamonista">código aberto</a></p>
+    <p>Micro plataforma para escrever <strong>texto</strong>. Sem algoritimos, trackers, js ou propaganda</p>
+    <h4>Um lugar para ler e ser lido. Sempre gratuito</h4>
 
-    <p>Caso queira contribuir:</p>
-    <ul>
-        <li>Claramente precisamos fazer temas melhores</li>
-        <li><a href="https://github.com/euventura/hamonista">Github</a>: Ajude a corrigir bugs e melhorar código</li>
-        <li>Sugestões - manda um <a href="mailto:salve@harmonista.com">salve</a> </li>
-    </ul>
+    <h5>Ler e escrever as suas ideias, pelas suas mãos. <a href="/cadastrar">Crie seu espaço</a></h5>
+    <br>
 
 </section>
+{{ if .posts }}
+<section>
+    <h4>Últimas historias</h4>
+
+    <dl class="post-list">
+        {{ range .posts }}
+        <dt class="post-list-item">
+            <small class="date" style="font-size: 15px">{{ .CreatedAt.Format "02/01/2006" }} </small>
+            <a class="item-link" href="/@/{{ .Blog.Subdomain }}/{{ .Slug }}">{{ .Title }}</a>
+            <small class="muted" style="font-size: 15px">@{{ .Blog.Subdomain }} </small>
+        </dt>
+        {{ end }}
+    </dl>
+    <a href="/leia">Descubra outras leituras</a>
+
+</section>
+{{ end }}
 
 {{ template "site_footer.html" .}}

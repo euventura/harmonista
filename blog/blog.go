@@ -69,7 +69,6 @@ func parseNavLinks(navString string) []NavLink {
 	return navLinks
 }
 
-// buildBlogURL constructs the correct URL for a blog based on subdomain settings
 func buildBlogURL(c *gin.Context, blog *models.Blog, path string) string {
 	domain := os.Getenv("DOMAIN")
 	if domain == "" {
@@ -101,6 +100,7 @@ func (b *BlogModule) RegisterRoutes(router *gin.Engine) {
 	blogGroup := router.Group("/@/:subdomain")
 	{
 		blogGroup.GET("/", b.index)
+		blogGroup.GET("/rss", b.rss)
 		blogGroup.GET("/p/:pageSlug", b.page)
 		blogGroup.GET("/t/:tagName", b.tag)
 		blogGroup.GET("/:postSlug", b.post)
@@ -124,34 +124,20 @@ func (b *BlogModule) index(c *gin.Context) {
 		return
 	}
 
-	// Track visit to blog home
-	if b.analytics != nil {
-		b.analytics.TrackVisit(c, blog.ID, nil)
-	}
-
-	// Debug: verificar se o tema está sendo carregado
-	fmt.Printf("DEBUG - Blog ID: %d, Subdomain: %s, Theme length: %d\n", blog.ID, blog.Subdomain, len(blog.Theme))
-	if len(blog.Theme) > 0 {
-		fmt.Printf("DEBUG - Theme preview: %.100s...\n", blog.Theme)
-	}
-
 	var posts []models.Post
-	if err := b.db.Where("blog_id = ? AND draft = ?", blog.ID, false).
+	b.db.Where("blog_id = ? AND draft = ?", blog.ID, false).
 		Order("created_at DESC").
-		Find(&posts).Error; err != nil {
-		c.HTML(http.StatusInternalServerError, "blog_error.html", gin.H{
-			"error": "Erro ao carregar posts",
-		})
-		return
-	}
+		Find(&posts)
 
 	navLinks := parseNavLinks(blog.Nav)
 
-	// Suporte para parâmetro ?css=<path>
 	previewCSS := c.Query("css")
 
-	// Build URLs based on request type (subdomain or /@/subdomain)
 	blogURL := buildBlogURL(c, blog, "")
+
+	if b.analytics != nil {
+		b.analytics.TrackVisit(c, blog.ID, nil)
+	}
 
 	c.HTML(http.StatusOK, "blog_index.html", gin.H{
 		"blog":                blog,
@@ -283,6 +269,9 @@ func (b *BlogModule) post(c *gin.Context) {
 	subdomain := c.Param("subdomain")
 	postSlug := c.Param("postSlug")
 
+	fmt.Println(subdomain)
+	fmt.Println(postSlug)
+
 	blog, err := b.getBlogBySubdomain(subdomain)
 	if err != nil {
 		c.HTML(http.StatusNotFound, "blog_error.html", gin.H{
@@ -305,7 +294,6 @@ func (b *BlogModule) post(c *gin.Context) {
 		b.analytics.TrackVisit(c, blog.ID, &postID)
 	}
 
-	// Buscar tags do post
 	var tags []models.Tag
 	b.db.Table("tags").
 		Joins("INNER JOIN post_tags ON tags.id = post_tags.tag_id").
@@ -322,7 +310,6 @@ func (b *BlogModule) post(c *gin.Context) {
 		}
 	}
 
-	// Buscar respostas a este post
 	var replies []models.Post
 	b.db.Preload("Blog").
 		Where("reply_post_id = ? AND draft = ?", post.ID, false).
@@ -391,92 +378,4 @@ func renderMarkdown(content string) string {
 		return content
 	}
 	return buf.String()
-}
-
-func formatInlineMarkdown(text string) string {
-	text = replaceBold(text)
-	text = replaceItalic(text)
-	text = replaceLinks(text)
-	text = replaceCode(text)
-	return text
-}
-
-func replaceBold(text string) string {
-	for strings.Contains(text, "**") {
-		first := strings.Index(text, "**")
-		if first == -1 {
-			break
-		}
-		second := strings.Index(text[first+2:], "**")
-		if second == -1 {
-			break
-		}
-		second += first + 2
-		content := text[first+2 : second]
-		text = text[:first] + "<strong>" + content + "</strong>" + text[second+2:]
-	}
-	return text
-}
-
-func replaceItalic(text string) string {
-	for strings.Contains(text, "*") && !strings.Contains(text, "**") {
-		first := strings.Index(text, "*")
-		if first == -1 {
-			break
-		}
-		second := strings.Index(text[first+1:], "*")
-		if second == -1 {
-			break
-		}
-		second += first + 1
-		content := text[first+1 : second]
-		text = text[:first] + "<em>" + content + "</em>" + text[second+1:]
-	}
-	return text
-}
-
-func replaceLinks(text string) string {
-	for strings.Contains(text, "[") {
-		linkStart := strings.Index(text, "[")
-		if linkStart == -1 {
-			break
-		}
-		linkEnd := strings.Index(text[linkStart:], "]")
-		if linkEnd == -1 {
-			break
-		}
-		linkEnd += linkStart
-
-		if linkEnd+1 >= len(text) || text[linkEnd+1] != '(' {
-			break
-		}
-
-		urlEnd := strings.Index(text[linkEnd+2:], ")")
-		if urlEnd == -1 {
-			break
-		}
-		urlEnd += linkEnd + 2
-
-		linkText := text[linkStart+1 : linkEnd]
-		url := text[linkEnd+2 : urlEnd]
-		text = text[:linkStart] + "<a href=\"" + url + "\">" + linkText + "</a>" + text[urlEnd+1:]
-	}
-	return text
-}
-
-func replaceCode(text string) string {
-	for strings.Contains(text, "`") {
-		first := strings.Index(text, "`")
-		if first == -1 {
-			break
-		}
-		second := strings.Index(text[first+1:], "`")
-		if second == -1 {
-			break
-		}
-		second += first + 1
-		content := text[first+1 : second]
-		text = text[:first] + "<code>" + content + "</code>" + text[second+1:]
-	}
-	return text
 }

@@ -1,6 +1,8 @@
 package blog
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -65,7 +67,7 @@ func createTestPost(db *gorm.DB, blogID int, draft bool) *models.Post {
 
 func TestGetBlogBySubdomain(t *testing.T) {
 	db := setupTestDB()
-	blogModule := NewBlogModule(db)
+	blogModule := NewBlogModule(db, nil)
 
 	user := createTestUser(db)
 	expectedBlog := createTestBlog(db, user.ID)
@@ -79,7 +81,7 @@ func TestGetBlogBySubdomain(t *testing.T) {
 
 func TestGetBlogBySubdomain_NotFound(t *testing.T) {
 	db := setupTestDB()
-	blogModule := NewBlogModule(db)
+	blogModule := NewBlogModule(db, nil)
 
 	blog, err := blogModule.getBlogBySubdomain("nonexistent")
 
@@ -182,48 +184,6 @@ func TestRenderMarkdown_CodeBlock(t *testing.T) {
 	assert.Contains(t, result, "</code></pre>")
 }
 
-func TestReplaceBold(t *testing.T) {
-	input := "This is **bold** text"
-	expected := "This is <strong>bold</strong> text"
-	result := replaceBold(input)
-
-	assert.Equal(t, expected, result)
-}
-
-func TestReplaceItalic(t *testing.T) {
-	input := "This is *italic* text"
-	expected := "This is <em>italic</em> text"
-	result := replaceItalic(input)
-
-	assert.Equal(t, expected, result)
-}
-
-func TestReplaceLinks(t *testing.T) {
-	input := "Check [this link](https://example.com)"
-	expected := "Check <a href=\"https://example.com\">this link</a>"
-	result := replaceLinks(input)
-
-	assert.Equal(t, expected, result)
-}
-
-func TestReplaceCode(t *testing.T) {
-	input := "This is `code` inline"
-	expected := "This is <code>code</code> inline"
-	result := replaceCode(input)
-
-	assert.Equal(t, expected, result)
-}
-
-func TestFormatInlineMarkdown(t *testing.T) {
-	input := "This is **bold** and *italic* and `code` and [link](https://example.com)"
-	result := formatInlineMarkdown(input)
-
-	assert.Contains(t, result, "<strong>bold</strong>")
-	assert.Contains(t, result, "<em>italic</em>")
-	assert.Contains(t, result, "<code>code</code>")
-	assert.Contains(t, result, "<a href=\"https://example.com\">link</a>")
-}
-
 func TestRenderMarkdown_ComplexDocument(t *testing.T) {
 	input := `# Main Title
 
@@ -251,4 +211,25 @@ code block here
 	assert.Contains(t, result, "<a href=\"https://example.com\">this link</a>")
 	assert.Contains(t, result, "<pre><code>")
 	assert.Contains(t, result, "code block here")
+}
+
+func TestRSS_Success(t *testing.T) {
+	db := setupTestDB()
+	blogModule := NewBlogModule(db, nil)
+	router := setupTestRouter(blogModule)
+
+	user := createTestUser(db)
+	blog := createTestBlog(db, user.ID)
+	createTestPost(db, blog.ID, false)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/@/testblog/rss", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "<rss")
+	assert.Contains(t, w.Body.String(), "<channel>")
+	assert.Contains(t, w.Body.String(), "<title>Test Blog</title>")
+	assert.Contains(t, w.Body.String(), "<item>")
+	assert.Contains(t, w.Body.String(), "<title>Test Post</title>")
 }
