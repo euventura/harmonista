@@ -35,7 +35,7 @@
     <link rel="canonical" href="{{ .postURL }}">
 
     <title>{{ .post.Title }} - {{ .blog.Title }}</title>
-    {{ elseif .page }}
+    {{ else if .page }}
     <!-- Page specific meta tags -->
     <meta name="keywords" content="{{ .blog.Title }}, {{ .page.Title }}">
     <meta name="description" content="{{ printf " %.*s" 160 .post.Content }}">
