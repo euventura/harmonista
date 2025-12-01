@@ -101,11 +101,7 @@
     {{ else if .blogThemeCSS }}
     <!-- Custom theme from database -->
     <style>
-        {
-                {
-                .blogThemeCSS
-            }
-        }
+        {{ .blogThemeCSS }}
     </style>
     {{ end }}
 </head>
