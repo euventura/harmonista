@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <meta name="author" content="{{ .blog.Title }}">
+    <meta name="author" content="{{ .blog.Subdomain }}">
     <meta name="generator" content="Harmonista">
 
     {{ if .post }}
@@ -35,7 +35,7 @@
     <link rel="canonical" href="{{ .postURL }}">
 
     <title>{{ .post.Title }} - {{ .blog.Title }}</title>
-    {{ else if .page }}
+    {{ elseif .page }}
     <!-- Page specific meta tags -->
     <meta name="keywords" content="{{ .blog.Title }}, {{ .page.Title }}">
     <meta name="description" content="{{ printf " %.*s" 160 .post.Content }}">
@@ -84,25 +84,27 @@
     <meta property="twitter:title" content="{{ .blog.Title }}">
 
     <!-- Additional SEO -->
-    <link rel="canonical" href="{{ .blogURL }}">
 
     <title>{{ .blog.Title }}</title>
     {{ end }}
 
     <!-- Additional SEO -->
-    <meta name="theme-color" content="#1f2328">
     <link rel="sitemap" type="application/xml" href="{{ domain }}/sitemap.xml">
+    <link rel="rss" type="application/xml" href="{{ .blogURL }}/rss">
+
 
     <link rel="stylesheet" href="{{ domain }}/public/css/base.css">
 
     {{ if .previewCSS }}
     <!-- Preview CSS from query parameter -->
     <link rel="stylesheet" href="{{ .previewCSS }}">
-    {{ else if .blogThemeCSS }}
-    <!-- Custom theme from database -->
-    <style>
-        {{ .blogThemeCSS }}
-    </style>
+    {{ end }}
+
+    {{ if .blogThemeCSS }}
+        <!-- Custom theme from database -->
+        <style>
+            {{ .blogThemeCSS }}
+        </style>
     {{ end }}
 </head>
 

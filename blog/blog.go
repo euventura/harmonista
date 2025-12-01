@@ -269,9 +269,6 @@ func (b *BlogModule) post(c *gin.Context) {
 	subdomain := c.Param("subdomain")
 	postSlug := c.Param("postSlug")
 
-	fmt.Println(subdomain)
-	fmt.Println(postSlug)
-
 	blog, err := b.getBlogBySubdomain(subdomain)
 	if err != nil {
 		c.HTML(http.StatusNotFound, "blog_error.html", gin.H{
