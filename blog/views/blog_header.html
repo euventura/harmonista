@@ -8,6 +8,7 @@
     <meta name="author" content="{{ .blog.Subdomain }}">
     <meta name="generator" content="Harmonista">
 
+
     {{ if .post }}
     <!-- Post specific meta tags -->
     <meta name="keywords" content="{{ .blog.Title }}, {{ .post.Title }}, {{ .post.Category }}">
@@ -93,7 +94,7 @@
     <link rel="rss" type="application/xml" href="{{ .blogURL }}/rss">
 
 
-    <link rel="stylesheet" href="{{ domain }}/public/css/base.css">
+    <link rel="stylesheet" href="{{ domain }}/public/css/base.min.css">
 
     {{ if .previewCSS }}
     <!-- Preview CSS from query parameter -->
