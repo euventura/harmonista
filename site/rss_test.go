@@ -20,7 +20,7 @@ func setupTestDB() *gorm.DB {
 		panic("failed to connect database")
 	}
 
-	db.AutoMigrate(&models.User{}, &models.Blog{}, &models.Post{}, &models.Tag{}, &models.PostTag{})
+	db.AutoMigrate(&models.User{}, &models.Blog{}, &models.Post{}, &models.Page{}, &models.Tag{}, &models.PostTag{})
 	return db
 }
 

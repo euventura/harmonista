@@ -139,6 +139,9 @@
                                 style="background-color: #28a745; color: white;">
                                 + Blog
                             </button>
+
+                            <button onclick="delUser({{.Blog.User.ID}})" style="background-color: red; color: white;">
+                                ## DELETE ##
                         </td>
                     </tr>
                     {{end}}
@@ -278,6 +281,33 @@
                     alert('Erro ao criar blog');
                 });
         }
+
+        function delUser(userID) {
+            if (!confirm('DELETER USUARIO E BLOG')) {
+                return;
+            }
+
+            fetch('/$/delete-user/' + userID, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Deletado com sucesso: ' + data.subdomain);
+                        window.location.reload();
+                    } else {
+                        alert('Erro ao criar blog: ' + (data.error || 'Erro desconhecido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao criar blog');
+                });
+        }
+
     </script>
 </body>
 

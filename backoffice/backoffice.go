@@ -35,6 +35,7 @@ func (b *BackofficeModule) RegisterRoutes(router *gin.Engine) {
 		backofficeGroup.POST("/validate-user/:userID", b.requireBackofficeAuth, b.validateUser)
 		backofficeGroup.POST("/clear-cache/:blogID", b.requireBackofficeAuth, b.clearBlogCache)
 		backofficeGroup.POST("/create-blog/:userID", b.requireBackofficeAuth, b.createBlog)
+		backofficeGroup.POST("/delete-user/:userID", b.requireBackofficeAuth, b.deleteUser)
 		backofficeGroup.GET("/logout", b.logout)
 	}
 }
@@ -238,7 +239,6 @@ func (b *BackofficeModule) logout(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/$/login")
 }
 
-// clearBlogCache limpa todo o cache de um blog
 func (b *BackofficeModule) clearBlogCache(c *gin.Context) {
 	blogID := c.Param("blogID")
 
@@ -260,7 +260,6 @@ func (b *BackofficeModule) clearBlogCache(c *gin.Context) {
 	})
 }
 
-// createBlog cria um novo blog para o usuário especificado com título e subdomain baseados em timestamp
 func (b *BackofficeModule) createBlog(c *gin.Context) {
 	userID := c.Param("userID")
 
@@ -311,7 +310,70 @@ func (b *BackofficeModule) createBlog(c *gin.Context) {
 	})
 }
 
-// checkPasswordHash verifica se a senha corresponde ao hash
+func (b *BackofficeModule) deleteUser(c *gin.Context) {
+	userID := c.Param("userID")
+
+	// Verificar se o usuário do backoffice está autorizado
+	_, exists := c.Get("backoffice_user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Usuário do backoffice não autenticado"})
+		return
+	}
+
+	var user models.User
+	if err := b.db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
+		return
+	}
+
+	if err := b.db.Transaction(func(tx *gorm.DB) error {
+		// Encontrar blogs do usuário
+		var blogs []models.Blog
+		if err := tx.Where("user_id = ?", user.ID).Find(&blogs).Error; err != nil {
+			return err
+		}
+
+		// Coletar IDs para exclusões em lote
+		blogIDs := make([]int, 0, len(blogs))
+		for _, blog := range blogs {
+			blogIDs = append(blogIDs, blog.ID)
+		}
+
+		if len(blogIDs) > 0 {
+			// Remover posts vinculados aos blogs
+			if err := tx.Where("blog_id IN ?", blogIDs).Delete(&models.Post{}).Error; err != nil {
+				return err
+			}
+
+			// Remover páginas vinculadas aos blogs (mantém consistência)
+			if err := tx.Where("blog_id IN ?", blogIDs).Delete(&models.Page{}).Error; err != nil {
+				return err
+			}
+
+			// Remover blogs do usuário
+			if err := tx.Where("id IN ?", blogIDs).Delete(&models.Blog{}).Error; err != nil {
+				return err
+			}
+		}
+
+		// Remover usuário
+		if err := tx.Delete(&user).Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao deletar usuario " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":       true,
+		"emailVerified": user.EmailVerified,
+	})
+
+}
+
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil

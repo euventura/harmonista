@@ -76,9 +76,10 @@ func (s *SiteModule) listReader(c *gin.Context) {
 	s.db.Table("posts").
 		Select("posts.*, blogs.subdomain as blog_subdomain, GROUP_CONCAT(tags.title) as tags").
 		Joins("INNER JOIN blogs ON posts.blog_id = blogs.id").
+		Joins("INNER JOIN users ON blogs.user_id = users.id").
 		Joins("LEFT JOIN post_tags ON post_tags.post_id = posts.id").
 		Joins("LEFT JOIN tags ON tags.id = post_tags.tag_id").
-		Where("blogs.is_list_reader = ? AND posts.draft = ?", true, false).
+		Where("blogs.is_list_reader = ? AND posts.draft = ? AND user.email_verified", true, false, true).
 		Group("posts.id").
 		Order("posts.created_at DESC").
 		Limit(limit).
@@ -101,6 +102,55 @@ func (s *SiteModule) sitemap(c *gin.Context) {
 	// Remove trailing slash if present
 	domain = strings.TrimSuffix(domain, "/")
 
+	type postWithBlog struct {
+		ID            uint
+		Slug          string
+		UpdatedAt     time.Time
+		BlogID        uint
+		BlogSubdomain string
+	}
+
+	var postRows []postWithBlog
+	s.db.Table("posts").
+		Select("posts.id, posts.slug, posts.updated_at, posts.blog_id, blogs.subdomain as blog_subdomain").
+		Joins("JOIN blogs ON posts.blog_id = blogs.id").
+		Joins("JOIN users ON blogs.user_id = users.id").
+		Where("users.email_verified = ? AND posts.draft = ?", true, false).
+		Order("posts.updated_at DESC").
+		Limit(1000).
+		Scan(&postRows)
+
+	blogPosts := make(map[uint][]postWithBlog)
+	blogSubdomains := make(map[uint]string)
+	blogIDs := make([]uint, 0)
+
+	for _, row := range postRows {
+		blogPosts[row.BlogID] = append(blogPosts[row.BlogID], row)
+		if _, exists := blogSubdomains[row.BlogID]; !exists {
+			blogSubdomains[row.BlogID] = row.BlogSubdomain
+			blogIDs = append(blogIDs, row.BlogID)
+		}
+	}
+
+	type pageRow struct {
+		BlogID    uint
+		Slug      string
+		UpdatedAt time.Time
+	}
+
+	pagesByBlog := make(map[uint][]pageRow)
+	if len(blogIDs) > 0 {
+		var pageRows []pageRow
+		s.db.Table("pages").
+			Select("pages.blog_id, pages.slug, pages.updated_at").
+			Where("pages.blog_id IN ?", blogIDs).
+			Scan(&pageRows)
+
+		for _, row := range pageRows {
+			pagesByBlog[row.BlogID] = append(pagesByBlog[row.BlogID], row)
+		}
+	}
+
 	// Build sitemap XML
 	var sitemap strings.Builder
 	sitemap.WriteString(`<?xml version="1.0" encoding="UTF-8"?>`)
@@ -121,39 +171,27 @@ func (s *SiteModule) sitemap(c *gin.Context) {
 	sitemap.WriteString("    <priority>0.8</priority>\n")
 	sitemap.WriteString("  </url>\n")
 
-	// Get all blogs
-	var blogs []models.Blog
-	s.db.Find(&blogs)
+	for _, blogID := range blogIDs {
+		subdomain := blogSubdomains[blogID]
 
-	// Add blog URLs
-	for _, blog := range blogs {
-		// Blog home page
 		sitemap.WriteString("  <url>\n")
-		sitemap.WriteString("    <loc>" + domain + "/@/" + blog.Subdomain + "/</loc>\n")
+		sitemap.WriteString("    <loc>" + domain + "/@/" + subdomain + "/</loc>\n")
 		sitemap.WriteString("    <changefreq>weekly</changefreq>\n")
 		sitemap.WriteString("    <priority>0.7</priority>\n")
 		sitemap.WriteString("  </url>\n")
 
-		// Get blog posts
-		var posts []models.Post
-		s.db.Where("blog_id = ?", blog.ID).Find(&posts)
-
-		for _, post := range posts {
+		for _, post := range blogPosts[blogID] {
 			sitemap.WriteString("  <url>\n")
-			sitemap.WriteString("    <loc>" + domain + "/@/" + blog.Subdomain + "/" + post.Slug + "</loc>\n")
+			sitemap.WriteString("    <loc>" + domain + "/@/" + subdomain + "/" + post.Slug + "</loc>\n")
 			sitemap.WriteString("    <lastmod>" + post.UpdatedAt.Format(time.RFC3339) + "</lastmod>\n")
 			sitemap.WriteString("    <changefreq>monthly</changefreq>\n")
 			sitemap.WriteString("    <priority>0.6</priority>\n")
 			sitemap.WriteString("  </url>\n")
 		}
 
-		// Get blog pages
-		var pages []models.Page
-		s.db.Where("blog_id = ?", blog.ID).Find(&pages)
-
-		for _, page := range pages {
+		for _, page := range pagesByBlog[blogID] {
 			sitemap.WriteString("  <url>\n")
-			sitemap.WriteString("    <loc>" + domain + "/@/" + blog.Subdomain + "/p/" + page.Slug + "</loc>\n")
+			sitemap.WriteString("    <loc>" + domain + "/@/" + subdomain + "/p/" + page.Slug + "</loc>\n")
 			sitemap.WriteString("    <lastmod>" + page.UpdatedAt.Format(time.RFC3339) + "</lastmod>\n")
 			sitemap.WriteString("    <changefreq>monthly</changefreq>\n")
 			sitemap.WriteString("    <priority>0.5</priority>\n")
@@ -161,7 +199,6 @@ func (s *SiteModule) sitemap(c *gin.Context) {
 		}
 	}
 
-	// Get all unique tags for tag pages
 	var tags []string
 	s.db.Model(&models.PostTag{}).
 		Joins("JOIN posts ON post_tags.post_id = posts.id").
