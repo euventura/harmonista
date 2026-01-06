@@ -2,6 +2,7 @@ package site
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -61,35 +62,32 @@ func (s *SiteModule) listReader(c *gin.Context) {
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if page < 1 {
-		page = 1
-	}
+	log.Println(page)
 	limit := 50
 	offset := (page - 1) * limit
 
-	var posts []struct {
-		models.Post
-		BlogSubdomain string `json:"blog_subdomain"`
-		Tags          string `json:"tags"`
-	}
+	var posts []models.Post
 
-	s.db.Table("posts").
-		Select("posts.*, blogs.subdomain as blog_subdomain, GROUP_CONCAT(tags.title) as tags").
+	s.db.Preload("Blog").
 		Joins("INNER JOIN blogs ON posts.blog_id = blogs.id").
-		Joins("INNER JOIN users ON blogs.user_id = users.id").
-		Joins("LEFT JOIN post_tags ON post_tags.post_id = posts.id").
-		Joins("LEFT JOIN tags ON tags.id = post_tags.tag_id").
-		Where("blogs.is_list_reader = ? AND posts.draft = ? AND user.email_verified", true, false, true).
-		Group("posts.id").
+		Where("blogs.is_list_reader = ? AND posts.draft = ?", true, false).
 		Order("posts.created_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&posts)
 
+	overflow := 0
+
+	if len(posts) == limit {
+		overflow = 1
+	}
+
 	c.HTML(http.StatusOK, "site_list_reader.html", gin.H{
-		"posts":  posts,
-		"domain": domain,
-		"page":   page,
+		"posts":    posts,
+		"domain":   domain,
+		"nextpage": page + 1,
+		"prevpage": page - 1,
+		"overflow": overflow,
 	})
 }
 
