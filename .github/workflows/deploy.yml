@@ -18,14 +18,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'  # Corresponde à versão no go.mod
+          go-version: '1.23'
           cache: true
-
-      - name: Download dependencies
-        run: |
-          echo "Downloading Go dependencies..."
-          go mod download
-          go mod verify
 
       - name: Download dependencies
         run: |
@@ -38,6 +32,13 @@ jobs:
           echo "Building Harmonista..."
           go build -o harmonista .
           chmod +x harmonista
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Create deployment directory structure
         run: |
@@ -63,50 +64,41 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
-          # Instalar sshpass
-          sudo apt-get update
-          sudo apt-get install -y sshpass
-
           # Criar diretório remoto
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
-            "$SSH_USER@$SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             "sudo mkdir -p /var/www/harmonista && sudo chown -R $SSH_USER:$SSH_USER /var/www/harmonista"
 
           # Parar o serviço
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
-            "$SSH_USER@$SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             "sudo systemctl stop harmonista 2>/dev/null || true"
 
           # Enviar todos os arquivos e diretórios
           echo "Uploading application files..."
-          sshpass -p "$SSH_PASSWORD" scp -r -o StrictHostKeyChecking=no \
-            deploy/* "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
+          scp -i ~/.ssh/deploy_key -r deploy/* "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
 
           # Verificar estrutura no servidor
           echo "Verifying deployment structure on server:"
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no \
-            "$SSH_USER@$SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             "ls -la /var/www/harmonista/ && echo '---' && find /var/www/harmonista -type d | head -20"
 
-      - name: Upload systemd service file
+      - name: Upload service and nginx config
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
-          sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no \
+          scp -i ~/.ssh/deploy_key \
             harmonista.service "$SSH_USER@$SSH_HOST:/tmp/harmonista.service"
+          scp -i ~/.ssh/deploy_key \
+            nginx.conf "$SSH_USER@$SSH_HOST:/tmp/harmonista-nginx.conf"
 
       - name: Verify deployment requirements
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
           echo "Verifying deployment requirements..."
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" bash << 'VERIFY'
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" bash << 'VERIFY'
           set -e
 
           # Verificar .env
@@ -152,14 +144,16 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             'sudo chmod +x /var/www/harmonista/harmonista && \
              sudo chown -R www-data:www-data /var/www/harmonista && \
-             sudo setcap cap_net_bind_service=+ep /var/www/harmonista/harmonista && \
              sudo chmod 600 /var/www/harmonista/.env && \
              sudo mv /tmp/harmonista.service /etc/systemd/system/harmonista.service && \
+             sudo mv /tmp/harmonista-nginx.conf /etc/nginx/sites-available/harmonista && \
+             sudo ln -sf /etc/nginx/sites-available/harmonista /etc/nginx/sites-enabled/harmonista && \
+             sudo nginx -t && \
+             sudo systemctl reload nginx && \
              sudo systemctl daemon-reload && \
              sudo systemctl enable harmonista && \
              sudo systemctl restart harmonista && \
@@ -169,20 +163,19 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
           echo "Checking service status..."
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             'sudo systemctl status harmonista --no-pager || true'
 
           echo ""
           echo "Recent logs:"
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             'sudo journalctl -u harmonista -n 50 --no-pager'
 
           echo ""
           echo "Checking if service is active..."
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             'if sudo systemctl is-active --quiet harmonista; then \
                echo "✅ Service is running successfully!"; \
                exit 0; \

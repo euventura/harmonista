@@ -27,17 +27,25 @@ Este guia explica como configurar o deploy automático da aplicação Harmonista
 |------------|-----------|---------|
 | `SSH_HOST` | Endereço do servidor | `seu-servidor.com` ou `192.168.1.100` |
 | `SSH_USER` | Usuário SSH | `ubuntu` ou `seu-usuario` |
-| `SSH_PASSWORD` | Senha SSH | `sua-senha-segura` |
+| `SSH_KEY` | Chave privada SSH | Conteúdo do arquivo `~/.ssh/id_ed25519` |
 
-### Captura de tela do processo:
-```
-Settings → Secrets and variables → Actions → New repository secret
+### Configurar chave SSH:
 
-Name: SSH_HOST
-Secret: seu-servidor.com
+1. Gere um par de chaves (se ainda não tiver):
+   ```bash
+   ssh-keygen -t ed25519 -C "deploy@harmonista"
+   ```
 
-[Add secret]
-```
+2. Copie a chave pública para o servidor:
+   ```bash
+   ssh-copy-id -i ~/.ssh/id_ed25519.pub seu-usuario@seu-servidor.com
+   ```
+
+3. No GitHub, adicione o conteúdo da chave **privada** como secret `SSH_KEY`:
+   ```bash
+   cat ~/.ssh/id_ed25519
+   # Copie todo o conteúdo (incluindo BEGIN e END)
+   ```
 
 ## 🎯 Como Funciona
 
@@ -87,9 +95,12 @@ sudo nano /var/www/harmonista/.env
 Cole o conteúdo do seu `.env` (use o `.env.example` como base):
 
 ```env
-# Configuração do Banco de Dados
-database=sqlite
-sqlite_db=database.db
+# Configuração do Banco de Dados (PostgreSQL)
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=harmonista
+PG_PASSWORD=sua-senha
+PG_DBNAME=harmonista
 
 # Segurança e Sessões
 SESSION_KEY=sua-chave-longa-e-segura
@@ -98,9 +109,8 @@ SESSION_SECRET=seu-secret-longo-e-seguro
 # Domínio
 DOMAIN=https://harmonista.org
 
-# Configuração SSL/HTTPS
-SSL_CERT_PATH=/etc/letsencrypt/live/harmonista.org/fullchain.pem
-SSL_KEY_PATH=/etc/letsencrypt/live/harmonista.org/privkey.pem
+# Porta da aplicação (nginx faz proxy reverso)
+PORT=8080
 
 # Configuração de Email (SMTP)
 SMTP_HOST=smtp.example.com
@@ -241,16 +251,17 @@ sudo systemctl stop apache2
 
 ### SSL não funciona
 
-Verifique se os certificados existem:
+Verifique se o Nginx está rodando e os certificados existem:
 ```bash
+sudo systemctl status nginx
 ls -la /etc/letsencrypt/live/harmonista.org/
 ```
 
-Se não existirem, instale o certbot:
+Se não existirem, instale o certbot e configure com Nginx:
 ```bash
 sudo apt-get update
-sudo apt-get install certbot
-sudo certbot certonly --standalone -d harmonista.org
+sudo apt-get install certbot python3-certbot-nginx
+sudo certbot --nginx -d harmonista.org -d *.harmonista.org
 ```
 
 ## 📂 Estrutura de Arquivos no Servidor
@@ -259,7 +270,7 @@ sudo certbot certonly --standalone -d harmonista.org
 /var/www/harmonista/
 ├── harmonista           # Binário executável
 ├── .env                 # Configurações (criado manualmente)
-├── database.db          # Banco de dados SQLite (criado automaticamente)
+├── analytics.db         # Banco de analytics SQLite (opcional)
 ├── public/              # Arquivos estáticos
 ├── admin/               # Views do admin
 │   └── views/

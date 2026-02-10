@@ -14,12 +14,8 @@ Restart=always
 RestartSec=5
 
 # Configurações de segurança
-# NoNewPrivileges precisa estar desabilitado para usar AmbientCapabilities
-# NoNewPrivileges=true
+NoNewPrivileges=true
 PrivateTmp=true
-
-# Permite ao processo se conectar a portas privilegiadas (como 80 e 443)
-AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 # Logs
 StandardOutput=journal

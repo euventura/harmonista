@@ -9,7 +9,7 @@ Uma rede de publicação de texto minimalista para quem gosta de ler e escrever.
 - Respeito à privacidade
 
 ## Como rodar
-Pré‑requisitos: Go 1.22+ (para compilar) ou binário já construído.
+Pré‑requisitos: Go 1.22+ (para compilar) ou binário já construído, PostgreSQL, Nginx.
 
 ### Configuração Inicial
 
@@ -23,15 +23,18 @@ Pré‑requisitos: Go 1.22+ (para compilar) ou binário já construído.
    nano .env  # ou use seu editor preferido
    ```
 
-### Modo Desenvolvimento (HTTP apenas)
+### Desenvolvimento
 
 Configure o `.env` para desenvolvimento:
 ```env
-database=sqlite
-sqlite_db=database.db
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=harmonista
+PG_PASSWORD=
+PG_DBNAME=harmonista
 SESSION_SECRET=LONG_LONG_SECRET
-DOMAIN=http://localhost
-# Deixe SSL_CERT_PATH e SSL_KEY_PATH vazios ou comentados
+DOMAIN=http://localhost:8080
+PORT=8080
 ```
 
 Execute o servidor:
@@ -44,49 +47,21 @@ go build -o harmonista .
 go run main.go
 ```
 
-Por padrão, o servidor inicia na porta 80 em modo HTTP (desenvolvimento).
+A aplicação roda na porta 8080. Em produção, o Nginx faz proxy reverso na porta 80 e o Certbot configura o HTTPS.
 
-### Modo Produção (HTTPS com Certbot)
+### Produção (Nginx + Certbot)
 
-O sistema suporta HTTPS automático com certificados do Let's Encrypt via Certbot.
+1. Copie o `nginx.conf` para o Nginx:
+   ```bash
+   sudo cp nginx.conf /etc/nginx/sites-available/harmonista
+   sudo ln -s /etc/nginx/sites-available/harmonista /etc/nginx/sites-enabled/
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
 
-#### 1. Instalar o Certbot
-
-```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install certbot
-
-# Fedora/RHEL
-sudo dnf install certbot
-
-# Arch Linux
-sudo pacman -S certbot
-```
-
-#### 2. Gerar certificados SSL
-
-```bash
-# Certifique-se de que nada está rodando nas portas 80 e 443
-sudo certbot certonly --standalone -d seudominio.com -d www.seudominio.com
-```
-
-Os certificados serão gerados em:
-- Certificado: `/etc/letsencrypt/live/seudominio.com/fullchain.pem`
-- Chave privada: `/etc/letsencrypt/live/seudominio.com/privkey.pem`
-
-#### 3. Configurar arquivo .env
-
-Edite o arquivo `.env` com as configurações de produção:
-
-```env
-database=sqlite
-sqlite_db=database.db
-SESSION_SECRET=LONG_LONG_SECRET
-DOMAIN=https://seudominio.com
-SSL_CERT_PATH=/etc/letsencrypt/live/seudominio.com/fullchain.pem
-SSL_KEY_PATH=/etc/letsencrypt/live/seudominio.com/privkey.pem
-```
+2. Configure o HTTPS com Certbot:
+   ```bash
+   sudo certbot --nginx -d seudominio.com -d *.seudominio.com
+   ```
 
 ## Estrutura (resumo)
 - `admin/` — painel administrativo (views e handlers)

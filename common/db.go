@@ -47,36 +47,6 @@ func ConnectPgDb() *gorm.DB {
 	return db
 }
 
-// ConnectDb conecta ao banco SQLite legado (usado para migração de dados)
-func ConnectDb() *gorm.DB {
-	var envFile map[string]string
-
-	get := func(key string) string {
-		if v, ok := envFile[key]; ok && v != "" {
-			return v
-		}
-		return os.Getenv(key)
-	}
-
-	dbFile := get("sqlite_db")
-	log.Println("attemptConnectDb: sqlite_db from env (raw):", dbFile)
-	if dbFile == "" {
-		log.Println("sqlite_db not set")
-		return nil
-	}
-
-	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
-	if err != nil {
-		log.Println("Error opening sqlite db: " + err.Error())
-		return nil
-	}
-	log.Println("opened sqlite db at:", dbFile)
-	return db
-
-}
-
 // ConnectAnalyticsDb conecta ao banco de dados de analytics separado
 func ConnectAnalyticsDb() *gorm.DB {
 	analyticsDbFile := os.Getenv("analytics_db")
