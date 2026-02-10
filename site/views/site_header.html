@@ -29,9 +29,11 @@
         content="uma plataforma de escrita e leitura com espírito minimalista com foco na privacidade. Somente o essencial: escrever e ler">
 
     <meta name="theme-color" content="#1f2328">
+    <link rel="preload" href="/public/css/base.min.css" as="style">
     <link rel="sitemap" type="application/xml" href="{{ domain }}/sitemap.xml">
     <link rel="rss" type="application/xml" href="{{ domain }}/rss">
 
+    <link rel="canonical" href="{{ domain }}{{ if .canonicalPath }}{{ .canonicalPath }}{{ else }}/{{ end }}">
     <title>harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Para escrever e ler</title>
     <link rel="stylesheet" href="/public/css/base.min.css">
     <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png">

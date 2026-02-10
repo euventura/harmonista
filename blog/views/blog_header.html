@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ domain }}/public/css/base.min.css" as="style">
     <meta name="robots" content="index, follow">
     <meta name="author" content="{{ .blog.Subdomain }}">
     <meta name="generator" content="Harmonista">
@@ -87,6 +88,7 @@
     <meta property="twitter:title" content="{{ .blog.Title }}">
 
     <!-- Additional SEO -->
+    <link rel="canonical" href="{{ .blogURL }}">
 
     <title>{{ .blog.Title }}</title>
     {{ end }}

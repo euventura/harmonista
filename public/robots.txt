@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /leia
+Allow: /@/
+Allow: /@/*
+Disallow: /admin/
+
+Sitemap: https://harmonista.org/sitemap.xml

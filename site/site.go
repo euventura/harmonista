@@ -33,6 +33,7 @@ func (s *SiteModule) RegisterRoutes(router *gin.Engine) {
 	router.GET("/leia", s.listReader)
 	router.GET("/rss", s.rss)
 	router.GET("/sitemap.xml", s.sitemap)
+	router.StaticFile("/robots.txt", "./public/robots.txt")
 }
 
 func (s *SiteModule) index(c *gin.Context) {
@@ -51,7 +52,8 @@ func (s *SiteModule) index(c *gin.Context) {
 		Find(&posts)
 
 	c.HTML(http.StatusOK, "site_index.html", gin.H{
-		"posts": posts,
+		"posts":         posts,
+		"canonicalPath": "/",
 	})
 }
 
@@ -83,11 +85,12 @@ func (s *SiteModule) listReader(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "site_list_reader.html", gin.H{
-		"posts":    posts,
-		"domain":   domain,
-		"nextpage": page + 1,
-		"prevpage": page - 1,
-		"overflow": overflow,
+		"posts":         posts,
+		"domain":        domain,
+		"nextpage":      page + 1,
+		"prevpage":      page - 1,
+		"overflow":      overflow,
+		"canonicalPath": "/leia",
 	})
 }
 
