@@ -18,6 +18,7 @@ func ConnectPgDb() *gorm.DB {
 	password := os.Getenv("PG_PASSWORD")
 	dbname := os.Getenv("PG_DBNAME")
 	sslmode := os.Getenv("PG_SSLMODE")
+	certificate := os.Getenv("PG_CERTIFICATE")
 
 	if host == "" || user == "" || dbname == "" {
 		log.Println("PostgreSQL config incomplete (PG_HOST, PG_USER, PG_DBNAME required)")
@@ -32,6 +33,10 @@ func ConnectPgDb() *gorm.DB {
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		host, port, user, password, dbname, sslmode)
+
+	if certificate != "" {
+		dsn += fmt.Sprintf(" sslrootcert=%s", certificate)
+	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
