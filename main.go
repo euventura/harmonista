@@ -30,16 +30,32 @@ func main() {
 		log.Println("No .env file found, using environment variables")
 	}
 
-	db := common.ConnectDb()
+	// Conectar ao banco principal (PostgreSQL)
+	db := common.ConnectPgDb()
 	if db == nil {
-		log.Fatal("Failed to connect to database")
+		log.Fatal("Failed to connect to PostgreSQL database")
 	}
 
 	if err := database.RunMigrations(db); err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
-	// Conectar ao banco de analytics (separado)
+	// Migração de dados SQLite → PostgreSQL (temporário)
+	// TODO: remover após migração completa
+	sqliteDb := common.ConnectDb()
+	if sqliteDb != nil {
+		if err := database.MigrateDataFromSQLite(db, sqliteDb); err != nil {
+			log.Printf("Warning: SQLite migration failed: %v", err)
+		}
+		// Fechar conexão SQLite
+		if sqlConn, err := sqliteDb.DB(); err == nil {
+			sqlConn.Close()
+		}
+	} else {
+		log.Println("No SQLite database found, skipping data migration")
+	}
+
+	// Conectar ao banco de analytics (separado, continua SQLite)
 	analyticsDb := common.ConnectAnalyticsDb()
 	analyticsModule := analytics.NewAnalyticsModule(analyticsDb)
 
