@@ -15,7 +15,7 @@ func TestSiteSitemap_FiltersAndIncludes(t *testing.T) {
 	t.Setenv("DOMAIN", "http://example.com")
 
 	db := setupTestDB()
-	siteModule := NewSiteModule(db, nil)
+	siteModule := NewSiteModule(db)
 	router := setupTestRouter(siteModule)
 
 	// Verified user and visible content

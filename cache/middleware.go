@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"harmonista/analytics"
 )
 
 type responseWriter struct {
@@ -19,7 +20,7 @@ func (w *responseWriter) Write(b []byte) (int, error) {
 }
 
 // CacheMiddleware is a middleware that caches blog post pages
-func CacheMiddleware(maxAge time.Duration) gin.HandlerFunc {
+func CacheMiddleware(maxAge time.Duration, analyticsModule *analytics.AnalyticsModule) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Only cache GET requests
 		if c.Request.Method != "GET" {
@@ -39,6 +40,11 @@ func CacheMiddleware(maxAge time.Duration) gin.HandlerFunc {
 		if subdomain == "" || slug == "" {
 			c.Next()
 			return
+		}
+
+		// Track visit (both cache hit and miss)
+		if analyticsModule != nil {
+			analyticsModule.TrackVisit(subdomain, slug)
 		}
 
 		// Try to read from cache

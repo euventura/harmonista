@@ -1,12 +1,14 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -47,24 +49,33 @@ func ConnectPgDb() *gorm.DB {
 	return db
 }
 
-// ConnectAnalyticsDb conecta ao banco de dados de analytics separado
-func ConnectAnalyticsDb() *gorm.DB {
-	analyticsDbFile := os.Getenv("analytics_db")
-	log.Println("attemptConnectAnalyticsDb: analytics_db from env (raw):", analyticsDbFile)
-
-	if analyticsDbFile == "" {
-		log.Println("analytics_db not set - analytics will be disabled")
-		return nil
+// ConnectRedis conecta ao Redis para analytics
+func ConnectRedis() *redis.Client {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		addr = "localhost:6379"
 	}
 
-	db, err := gorm.Open(sqlite.Open(analyticsDbFile), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
+	password := os.Getenv("REDIS_PASSWORD")
+
+	dbNum := 0
+	if dbStr := os.Getenv("REDIS_DB"); dbStr != "" {
+		if n, err := strconv.Atoi(dbStr); err == nil {
+			dbNum = n
+		}
+	}
+
+	client := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: password,
+		DB:       dbNum,
 	})
-	if err != nil {
-		log.Println("Error opening analytics sqlite db: " + err.Error())
+
+	if err := client.Ping(context.Background()).Err(); err != nil {
+		log.Printf("Error connecting to Redis at %s: %v - analytics will be disabled", addr, err)
 		return nil
 	}
 
-	log.Println("opened analytics sqlite db at:", analyticsDbFile)
-	return db
+	log.Printf("Connected to Redis (%s, db=%d)", addr, dbNum)
+	return client
 }

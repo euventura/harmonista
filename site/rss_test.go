@@ -68,7 +68,7 @@ func createTestPost(db *gorm.DB, blogID int, draft bool) *models.Post {
 
 func TestSiteRSS_Success(t *testing.T) {
 	db := setupTestDB()
-	siteModule := NewSiteModule(db, nil)
+	siteModule := NewSiteModule(db)
 	router := setupTestRouter(siteModule)
 
 	user := createTestUser(db)
@@ -103,7 +103,7 @@ func TestSiteRSS_Success(t *testing.T) {
 
 func TestSiteRSS_Filtering(t *testing.T) {
 	db := setupTestDB()
-	siteModule := NewSiteModule(db, nil)
+	siteModule := NewSiteModule(db)
 	router := setupTestRouter(siteModule)
 
 	user := createTestUser(db)

@@ -12,19 +12,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"harmonista/analytics"
 	"harmonista/models"
 )
 
 type SiteModule struct {
-	db        *gorm.DB
-	analytics *analytics.AnalyticsModule
+	db *gorm.DB
 }
 
-func NewSiteModule(db *gorm.DB, analyticsModule *analytics.AnalyticsModule) *SiteModule {
+func NewSiteModule(db *gorm.DB) *SiteModule {
 	return &SiteModule{
-		db:        db,
-		analytics: analyticsModule,
+		db: db,
 	}
 }
 

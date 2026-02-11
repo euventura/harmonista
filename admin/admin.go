@@ -880,11 +880,14 @@ func (a *AdminModule) editPost(c *gin.Context) {
 
 	tags := a.getPostTags(int(post.ID))
 
-	// Buscar contagem de visitas do post
-	postIDInt, _ := strconv.Atoi(postID)
+	// Buscar contagem de visitas do post via Redis
 	visitCount := int64(0)
 	if a.analytics != nil {
-		visitCount = a.analytics.GetPostVisitCount(postIDInt)
+		// Need blog subdomain to look up visits
+		var blog models.Blog
+		if err := a.db.First(&blog, post.BlogID).Error; err == nil {
+			visitCount = a.analytics.GetPageVisits(blog.Subdomain, post.Slug)
+		}
 	}
 
 	// Buscar post pai se for uma resposta (pode ser de qualquer blog)
@@ -1433,20 +1436,6 @@ func checkPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-// Structs para dados do analytics com porcentagens calculadas
-type DayVisitChart struct {
-	Date       string
-	Count      int64
-	Percentage float64
-}
-
-type PostVisitChart struct {
-	PostID     int
-	PostTitle  string
-	Count      int64
-	Percentage float64
-}
-
 func (a *AdminModule) analytics_page(c *gin.Context) {
 	subdomain := c.Param("subdomain")
 	blogData, exists := c.Get("blog")
@@ -1468,70 +1457,12 @@ func (a *AdminModule) analytics_page(c *gin.Context) {
 		return
 	}
 
-	// Buscar visitas por dia dos últimos 30 dias
-	visitsByDay := a.analytics.GetVisitsByDay(blog.ID, 15)
-
-	// Buscar top 10 posts dos últimos 30 dias
-	topPosts := a.analytics.GetTopPosts(blog.ID, 30, 10)
-
-	// Buscar títulos dos posts
-	for i := range topPosts {
-		var post models.Post
-		if err := a.db.First(&post, topPosts[i].PostID).Error; err == nil {
-			topPosts[i].PostTitle = post.Title
-		} else {
-			topPosts[i].PostTitle = "Post não encontrado"
-		}
-	}
-
-	// Calcular valor máximo para normalização dos gráficos
-	maxVisitsPerDay := int64(1)
-	for _, day := range visitsByDay {
-		if day.Count > maxVisitsPerDay {
-			maxVisitsPerDay = day.Count
-		}
-	}
-
-	maxVisitsPerPost := int64(1)
-	for _, post := range topPosts {
-		if post.Count > maxVisitsPerPost {
-			maxVisitsPerPost = post.Count
-		}
-	}
-
-	// Converter para structs com porcentagens calculadas
-	dayCharts := make([]DayVisitChart, len(visitsByDay))
-	for i, day := range visitsByDay {
-		percentage := 0.0
-		if maxVisitsPerDay > 0 {
-			percentage = (float64(day.Count) / float64(maxVisitsPerDay)) * 100
-		}
-		dayCharts[i] = DayVisitChart{
-			Date:       day.Date,
-			Count:      day.Count,
-			Percentage: percentage,
-		}
-	}
-
-	postCharts := make([]PostVisitChart, len(topPosts))
-	for i, post := range topPosts {
-		percentage := 0.0
-		if maxVisitsPerPost > 0 {
-			percentage = (float64(post.Count) / float64(maxVisitsPerPost)) * 100
-		}
-		postCharts[i] = PostVisitChart{
-			PostID:     post.PostID,
-			PostTitle:  post.PostTitle,
-			Count:      post.Count,
-			Percentage: percentage,
-		}
-	}
+	topPages := a.analytics.GetTopPages(blog.Subdomain, 20)
 
 	c.HTML(http.StatusOK, "admin_analytics.html", gin.H{
 		"subdomain":        subdomain,
 		"blog":             blog,
 		"analyticsEnabled": true,
-		"visitsByDay":      dayCharts,
-		"topPosts":         postCharts,
+		"topPages":         topPages,
 	})
 }

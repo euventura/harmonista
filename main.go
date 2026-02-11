@@ -37,9 +37,9 @@ func main() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
-	// Conectar ao banco de analytics (separado, SQLite)
-	analyticsDb := common.ConnectAnalyticsDb()
-	analyticsModule := analytics.NewAnalyticsModule(analyticsDb)
+	// Conectar ao Redis para analytics
+	redisClient := common.ConnectRedis()
+	analyticsModule := analytics.NewAnalyticsModule(redisClient)
 
 	router := gin.Default()
 
@@ -68,7 +68,7 @@ func main() {
 	router.Use(common.SubdomainMiddleware())
 
 	// Add cache middleware for blog posts (24 hour cache)
-	router.Use(cache.CacheMiddleware(24 * time.Hour))
+	router.Use(cache.CacheMiddleware(24*time.Hour, analyticsModule))
 
 	router.SetFuncMap(map[string]interface{}{
 		"now": func() time.Time {
@@ -87,7 +87,7 @@ func main() {
 
 	router.Static("/public", "./public")
 
-	siteModule := site.NewSiteModule(db, analyticsModule)
+	siteModule := site.NewSiteModule(db)
 	siteModule.RegisterRoutes(router)
 
 	adminModule := admin.NewAdminModule(db, analyticsModule)

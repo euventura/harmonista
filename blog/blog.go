@@ -136,7 +136,7 @@ func (b *BlogModule) index(c *gin.Context) {
 	blogURL := buildBlogURL(c, blog, "")
 
 	if b.analytics != nil {
-		b.analytics.TrackVisit(c, blog.ID, nil)
+		b.analytics.TrackVisit(blog.Subdomain, "_")
 	}
 
 	c.HTML(http.StatusOK, "blog_index.html", gin.H{
@@ -284,11 +284,6 @@ func (b *BlogModule) post(c *gin.Context) {
 			"error": "Post não encontrado",
 		})
 		return
-	}
-
-	postID := int(post.ID)
-	if b.analytics != nil {
-		b.analytics.TrackVisit(c, blog.ID, &postID)
 	}
 
 	var tags []models.Tag
