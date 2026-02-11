@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 var ctx = context.Background()
@@ -18,35 +18,35 @@ type PageVisits struct {
 	Percentage float64
 }
 
-// AnalyticsModule gerencia o tracking de analytics via Redis
+// AnalyticsModule gerencia o tracking de analytics via Valkey
 type AnalyticsModule struct {
-	rdb *redis.Client
+	vk valkey.Client
 }
 
 // NewAnalyticsModule cria uma nova instância do módulo de analytics
-func NewAnalyticsModule(rdb *redis.Client) *AnalyticsModule {
-	if rdb == nil {
-		log.Println("Redis is nil, analytics will be disabled")
+func NewAnalyticsModule(vk valkey.Client) *AnalyticsModule {
+	if vk == nil {
+		log.Println("Valkey is nil, analytics will be disabled")
 		return nil
 	}
 
-	log.Println("Analytics module initialized successfully (Redis)")
-	return &AnalyticsModule{rdb: rdb}
+	log.Println("Analytics module initialized successfully (Valkey)")
+	return &AnalyticsModule{vk: vk}
 }
 
-// key builds the Redis key: analytics.{blog}.{page}
+// key builds the Valkey key: analytics.{blog}.{page}
 func key(blog, page string) string {
 	return "analytics." + blog + "." + page
 }
 
 // TrackVisit incrementa o contador de visitas para uma página
 func (a *AnalyticsModule) TrackVisit(blog string, page string) {
-	if a == nil || a.rdb == nil {
+	if a == nil || a.vk == nil {
 		return
 	}
 
 	go func() {
-		if err := a.rdb.Incr(ctx, key(blog, page)).Err(); err != nil {
+		if err := a.vk.Do(ctx, a.vk.B().Incr().Key(key(blog, page)).Build()).Error(); err != nil {
 			log.Printf("Error tracking visit for %s/%s: %v", blog, page, err)
 		}
 	}()
@@ -54,11 +54,11 @@ func (a *AnalyticsModule) TrackVisit(blog string, page string) {
 
 // GetPageVisits retorna o número de visitas de uma página específica
 func (a *AnalyticsModule) GetPageVisits(blog string, page string) int64 {
-	if a == nil || a.rdb == nil {
+	if a == nil || a.vk == nil {
 		return 0
 	}
 
-	val, err := a.rdb.Get(ctx, key(blog, page)).Int64()
+	val, err := a.vk.Do(ctx, a.vk.B().Get().Key(key(blog, page)).Build()).ToInt64()
 	if err != nil {
 		return 0
 	}
@@ -67,22 +67,31 @@ func (a *AnalyticsModule) GetPageVisits(blog string, page string) int64 {
 
 // GetAllBlogVisits retorna mapa de página→contagem para um blog
 func (a *AnalyticsModule) GetAllBlogVisits(blog string) map[string]int64 {
-	if a == nil || a.rdb == nil {
+	if a == nil || a.vk == nil {
 		return nil
 	}
 
 	result := make(map[string]int64)
 	prefix := "analytics." + blog + "."
 
-	iter := a.rdb.Scan(ctx, 0, prefix+"*", 0).Iterator()
-	for iter.Next(ctx) {
-		k := iter.Val()
-		val, err := a.rdb.Get(ctx, k).Int64()
+	var cursor uint64
+	for {
+		entry, err := a.vk.Do(ctx, a.vk.B().Scan().Cursor(cursor).Match(prefix+"*").Count(100).Build()).AsScanEntry()
 		if err != nil {
-			continue
+			break
 		}
-		page := strings.TrimPrefix(k, prefix)
-		result[page] = val
+		for _, k := range entry.Elements {
+			val, err := a.vk.Do(ctx, a.vk.B().Get().Key(k).Build()).ToInt64()
+			if err != nil {
+				continue
+			}
+			page := strings.TrimPrefix(k, prefix)
+			result[page] = val
+		}
+		cursor = entry.Cursor
+		if cursor == 0 {
+			break
+		}
 	}
 
 	return result

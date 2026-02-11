@@ -37,9 +37,9 @@ func main() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
-	// Conectar ao Redis para analytics
-	redisClient := common.ConnectRedis()
-	analyticsModule := analytics.NewAnalyticsModule(redisClient)
+	// Conectar ao Valkey para analytics
+	valkeyClient := common.ConnectValkey()
+	analyticsModule := analytics.NewAnalyticsModule(valkeyClient)
 
 	router := gin.Default()
 

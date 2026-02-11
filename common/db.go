@@ -2,12 +2,13 @@ package common
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -49,35 +50,45 @@ func ConnectPgDb() *gorm.DB {
 	return db
 }
 
-// ConnectRedis conecta ao Redis para analytics
-func ConnectRedis() *redis.Client {
-	addr := os.Getenv("REDIS_ADDR")
+// ConnectValkey conecta ao Valkey para analytics
+func ConnectValkey() valkey.Client {
+	addr := os.Getenv("VALKEY_ADDR")
 	if addr == "" {
 		addr = "localhost:6379"
 	}
 
-	username := os.Getenv("REDIS_USERNAME")
-	password := os.Getenv("REDIS_PASSWORD")
+	username := os.Getenv("VALKEY_USERNAME")
+	password := os.Getenv("VALKEY_PASSWORD")
+	useTLS := os.Getenv("VALKEY_TLS") == "true"
 
-	dbNum := 0
-	if dbStr := os.Getenv("REDIS_DB"); dbStr != "" {
+	opts := valkey.ClientOption{
+		InitAddress: []string{addr},
+		Username:    username,
+		Password:    password,
+	}
+
+	if dbStr := os.Getenv("VALKEY_DB"); dbStr != "" {
 		if n, err := strconv.Atoi(dbStr); err == nil {
-			dbNum = n
+			opts.SelectDB = n
 		}
 	}
 
-	client := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Username: username,
-		Password: password,
-		DB:       dbNum,
-	})
+	if useTLS {
+		opts.TLSConfig = &tls.Config{}
+	}
 
-	if err := client.Ping(context.Background()).Err(); err != nil {
-		log.Printf("Error connecting to Redis at %s: %v - analytics will be disabled", addr, err)
+	client, err := valkey.NewClient(opts)
+	if err != nil {
+		log.Printf("Error connecting to Valkey at %s: %v - analytics will be disabled", addr, err)
 		return nil
 	}
 
-	log.Printf("Connected to Redis (%s, db=%d)", addr, dbNum)
+	if err := client.Do(context.Background(), client.B().Ping().Build()).Error(); err != nil {
+		log.Printf("Error pinging Valkey at %s: %v - analytics will be disabled", addr, err)
+		client.Close()
+		return nil
+	}
+
+	log.Printf("Connected to Valkey (%s)", addr)
 	return client
 }
