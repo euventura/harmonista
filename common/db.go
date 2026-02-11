@@ -56,6 +56,7 @@ func ConnectRedis() *redis.Client {
 		addr = "localhost:6379"
 	}
 
+	username := os.Getenv("REDIS_USERNAME")
 	password := os.Getenv("REDIS_PASSWORD")
 
 	dbNum := 0
@@ -67,6 +68,7 @@ func ConnectRedis() *redis.Client {
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     addr,
+		Username: username,
 		Password: password,
 		DB:       dbNum,
 	})
