@@ -80,7 +80,7 @@ jobs:
 
           # Enviar todos os arquivos e diretórios
           echo "Uploading application files..."
-          scp -i ~/.ssh/deploy_key -r deploy/* "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key" deploy/ "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
 
           # Verificar estrutura no servidor
           echo "Verifying deployment structure on server:"
