@@ -33,6 +33,11 @@ jobs:
           go build -o harmonista .
           chmod +x harmonista
 
+      - name: Minify CSS
+        run: |
+          echo "Minifying CSS..."
+          python3 scripts/minify_css.py
+
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
