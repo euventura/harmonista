@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
@@ -31,19 +33,19 @@
         content="{{ if .pageDescription }}{{ .pageDescription }}{{ else }}uma plataforma de escrita e leitura com espírito minimalista com foco na privacidade. Somente o essencial: escrever e ler{{ end }}">
 
     <meta name="theme-color" content="#1f2328">
-    <link rel="preload" href="/public/css/base.min.css" as="style">
-    <link rel="preload" href="https://fonts.gstatic.com/s/lora/v32/0QI6MX1D_JOuMw_3Lkx7WjvGbbeI.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" as="font" type="font/woff2" crossorigin>
     
     <link rel="sitemap" type="application/xml" href="{{ domain }}/sitemap.xml">
     <link rel="rss" type="application/xml" href="{{ domain }}/rss">
 
     <link rel="canonical" href="{{ domain }}{{ if .canonicalPath }}{{ .canonicalPath }}{{ else }}/{{ end }}">
     <title>{{ if .pageTitle }}{{ .pageTitle }}{{ else }}harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Para escrever e ler{{ end }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" media="print" onload="this.media='all'">
+    
+    <link rel="preload" href="/public/css/base.min.css" as="style">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap">
+    </noscript>
     <link rel="stylesheet" href="/public/css/base.min.css">
 
 
