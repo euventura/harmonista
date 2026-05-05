@@ -28,19 +28,22 @@ func CacheMiddleware(maxAge time.Duration, analyticsModule *analytics.AnalyticsM
 			return
 		}
 
-		// Only cache blog post pages (/@/subdomain/slug)
+		// Only cache blog post pages (/@/subdomain/slug) and the index page (/)
 		path := c.Request.URL.Path
-		if !isBlogPostPath(path) {
-			c.Next()
-			return
+		var subdomain, slug string
+
+		if path == "/" {
+			subdomain = "site"
+			slug = "index"
+		} else if isBlogPostPath(path) {
+			subdomain, slug = extractFromPath(path)
 		}
 
-		// Extract subdomain and slug from path
-		subdomain, slug := extractFromPath(path)
 		if subdomain == "" || slug == "" {
 			c.Next()
 			return
 		}
+
 
 		// Track visit (both cache hit and miss)
 		if analyticsModule != nil {

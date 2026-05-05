@@ -1,7 +1,6 @@
 package site
 
 import (
-	"fmt"
 	"html"
 	"log"
 	"net/http"
@@ -53,7 +52,6 @@ func (s *SiteModule) index(c *gin.Context) {
 	if domain == "" {
 		domain = "http://localhost/"
 	}
-	fmt.Println(domain)
 	var posts []models.Post
 
 	s.db.Preload("Blog").
