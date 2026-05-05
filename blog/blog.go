@@ -300,6 +300,10 @@ func (b *BlogModule) post(c *gin.Context) {
 		Where("post_tags.post_id = ?", post.ID).
 		Find(&tags)
 
+	if b.analytics != nil {
+		b.analytics.TrackVisit(blog.Subdomain, post.Slug)
+	}
+
 	var replyToPost *models.Post
 	if post.ReplyPostID != nil {
 		var parentPost models.Post

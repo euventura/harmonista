@@ -58,7 +58,7 @@ func (a *AnalyticsModule) GetPageVisits(blog string, page string) int64 {
 		return 0
 	}
 
-	val, err := a.vk.Do(ctx, a.vk.B().Get().Key(key(blog, page)).Build()).ToInt64()
+	val, err := a.vk.Do(ctx, a.vk.B().Get().Key(key(blog, page)).Build()).AsInt64()
 	if err != nil {
 		return 0
 	}
@@ -81,7 +81,7 @@ func (a *AnalyticsModule) GetAllBlogVisits(blog string) map[string]int64 {
 			break
 		}
 		for _, k := range entry.Elements {
-			val, err := a.vk.Do(ctx, a.vk.B().Get().Key(k).Build()).ToInt64()
+			val, err := a.vk.Do(ctx, a.vk.B().Get().Key(k).Build()).AsInt64()
 			if err != nil {
 				continue
 			}
