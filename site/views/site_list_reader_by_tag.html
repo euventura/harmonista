@@ -1,8 +1,8 @@
-{{ template "blog_header.html" .}}
+{{ template "site_header.html" .}}
 
 <section class="list-reader">
     <article class="list-reader-description">
-        <h3>Tag: {{ .tag.Title }}</h3>
+        <h1>Tag: {{ .tag.Title }}</h1>
         <p>Leia o que estamos escrevendo sobre {{ .tag.Title }}</p>
     </article>
 
@@ -30,4 +30,4 @@
     </article>
 </section>
 
-{{ template "blog_footer.html" .}}
+{{ template "site_footer.html" .}}

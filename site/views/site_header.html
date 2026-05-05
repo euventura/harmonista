@@ -10,23 +10,25 @@
     <meta name="keywords"
         content="blog, publicação, post, site, leitura, minimalismo, privacidade, anonimato, site, crie seu site, crie seu blog, plataforma de blog, escrita online, leitura online, pluicações, lista de leitura, comunidade de leitura">
     <meta name="description"
-        content="uma plataforma de escrita e leitura minimalista com foco na privacidade. Somente o essencial: escrever e ler">
+        content="{{ if .pageDescription }}{{ .pageDescription }}{{ else }}uma plataforma de escrita e leitura minimalista com foco na privacidade. Somente o essencial: escrever e ler{{ end }}">
+    <meta property="og:image" content="{{ domain }}/public/apple-touch-icon.png">
+    <meta property="twitter:image" content="{{ domain }}/public/apple-touch-icon.png">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ domain }}">
     <meta property="og:title"
-        content="Harmonista ⌐◯ᵔ◯  - Plataforma de Blog Minimalista : Somente o essencial: escrever e ler">
+        content="{{ if .pageTitle }}{{ .pageTitle }}{{ else }}Harmonista ⌐◯ᵔ◯  - Plataforma de Blog Minimalista : Somente o essencial: escrever e ler{{ end }}">
     <meta property="og:description"
-        content="uma plataforma de escrita e leitura com espírito minimalista com foco na privacidade">
+        content="{{ if .pageDescription }}{{ .pageDescription }}{{ else }}uma plataforma de escrita e leitura com espírito minimalista com foco na privacidade{{ end }}">
     <meta property="og:site_name" content="Harmonista ⌐◯ᵔ◯ ">
     <meta property="og:locale" content="pt_BR">
 
     <meta property="twitter:card" content="summary">
     <meta property="twitter:url" content="{{ domain }}">
     <meta property="twitter:title"
-        content="harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Somente o essencial: escrever e ler">
+        content="{{ if .pageTitle }}{{ .pageTitle }}{{ else }}harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Somente o essencial: escrever e ler{{ end }}">
     <meta property="twitter:description"
-        content="uma plataforma de escrita e leitura com espírito minimalista com foco na privacidade. Somente o essencial: escrever e ler">
+        content="{{ if .pageDescription }}{{ .pageDescription }}{{ else }}uma plataforma de escrita e leitura com espírito minimalista com foco na privacidade. Somente o essencial: escrever e ler{{ end }}">
 
     <meta name="theme-color" content="#1f2328">
     <link rel="preload" href="/public/css/base.css" as="style">
@@ -34,7 +36,7 @@
     <link rel="rss" type="application/xml" href="{{ domain }}/rss">
 
     <link rel="canonical" href="{{ domain }}{{ if .canonicalPath }}{{ .canonicalPath }}{{ else }}/{{ end }}">
-    <title>harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Para escrever e ler</title>
+    <title>{{ if .pageTitle }}{{ .pageTitle }}{{ else }}harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Para escrever e ler{{ end }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
@@ -43,6 +45,16 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Harmonista",
+      "url": "{{ domain }}",
+      "description": "Uma plataforma de escrita e leitura minimalista com foco na privacidade."
+    }
+    </script>
 
 </head>
 

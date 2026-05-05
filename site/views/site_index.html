@@ -2,23 +2,24 @@
 
 <section class="site-hero">
 
-    <p class="hero-pitch">Micro plataforma para escrever <strong>texto</strong>. Sem algoritimos, trackers, js ou propaganda</p>
-    <h4 class="hero-sub">Um lugar para ler e ser lido. Sempre gratuito</h4>
+    <p class="hero-pitch">Micro plataforma para escrever <strong>texto</strong>. Sem algoritimos, trackers, js ou
+        propaganda</p>
+    <h2 class="hero-sub">Um lugar para ler e ser lido. Sempre gratuito</h2>
 
-    <h5>Ler e escrever as suas ideias, pelas suas mãos. <a href="/cadastrar">Crie seu espaço</a></h5>
+    <h3>Ler e escrever as suas ideias, pelas suas mãos. <a href="/cadastrar">Crie seu espaço</a></h3>
     <br>
 
 </section>
 {{ if .posts }}
 <section>
-    <h4>Últimas historias</h4>
+    <h2>Últimas historias</h2>
 
     <dl class="post-list">
         {{ range .posts }}
         <dt class="post-list-item">
             <small class="date" style="font-size: 15px">{{ .CreatedAt.Format "02/01/2006" }} </small>
             <a class="item-link" href="/@/{{ .Blog.Subdomain }}/{{ .Slug }}">{{ .Title }}</a>
-            <small class="muted" style="font-size: 15px">@{{ .Blog.Subdomain }} </small>
+            <a class="muted" style="font-size: 15px" href="/@/{{ .Blog.Subdomain }}">@{{ .Blog.Subdomain }}</a>
         </dt>
         {{ end }}
     </dl>

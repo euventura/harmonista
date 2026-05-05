@@ -2264,6 +2264,7 @@ h1.harmonista a:hover {
     color: var(--muted);
     font-weight: 400;
     margin-top: 0.25rem;
+    font-size: 15px;
 }
 
 /* Lista de posts — mais elegante */

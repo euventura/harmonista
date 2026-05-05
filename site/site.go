@@ -42,6 +42,7 @@ func NewSiteModule(db *gorm.DB) *SiteModule {
 func (s *SiteModule) RegisterRoutes(router *gin.Engine) {
 	router.GET("/", s.index)
 	router.GET("/leia", s.listReader)
+	router.GET("/leia/:tag", s.listReaderByTag)
 	router.GET("/rss", s.rss)
 	router.GET("/sitemap.xml", s.sitemap)
 	router.StaticFile("/robots.txt", "./public/robots.txt")
@@ -63,8 +64,10 @@ func (s *SiteModule) index(c *gin.Context) {
 		Find(&posts)
 
 	c.HTML(http.StatusOK, "site_index.html", gin.H{
-		"posts":         posts,
-		"canonicalPath": "/",
+		"posts":           posts,
+		"canonicalPath":   "/",
+		"pageTitle":       "Harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Para escrever e ler",
+		"pageDescription": "Uma plataforma de escrita e leitura minimalista com foco na privacidade. Somente o essencial: escrever e ler.",
 	})
 }
 
@@ -96,12 +99,47 @@ func (s *SiteModule) listReader(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "site_list_reader.html", gin.H{
-		"posts":         posts,
-		"domain":        domain,
-		"nextpage":      page + 1,
-		"prevpage":      page - 1,
-		"overflow":      overflow,
-		"canonicalPath": "/leia",
+		"posts":           posts,
+		"domain":          domain,
+		"nextpage":        page + 1,
+		"prevpage":        page - 1,
+		"overflow":        overflow,
+		"canonicalPath":   "/leia",
+		"pageTitle":       "Leia e Descubra - Harmonista",
+		"pageDescription": "Explore as últimas publicações da comunidade Harmonista. Textos minimalistas, sem distrações.",
+	})
+}
+
+func (s *SiteModule) listReaderByTag(c *gin.Context) {
+	domain := os.Getenv("DOMAIN")
+	if domain == "" {
+		domain = "http://localhost/"
+	}
+
+	tagName := c.Param("tag")
+
+	var tag models.Tag
+	if err := s.db.Where("title = ?", tagName).First(&tag).Error; err != nil {
+		c.Redirect(http.StatusFound, "/leia")
+		return
+	}
+
+	var posts []models.Post
+	s.db.Preload("Blog").
+		Joins("INNER JOIN blogs ON posts.blog_id = blogs.id").
+		Joins("INNER JOIN post_tags ON posts.id = post_tags.post_id").
+		Where("blogs.is_list_reader = ? AND posts.draft = ? AND post_tags.tag_id = ?", true, false, tag.ID).
+		Order("posts.created_at DESC").
+		Limit(50).
+		Find(&posts)
+
+	c.HTML(http.StatusOK, "site_list_reader_by_tag.html", gin.H{
+		"posts":           posts,
+		"tag":             tag,
+		"domain":          domain,
+		"canonicalPath":   "/leia/" + tagName,
+		"pageTitle":       "Textos sobre #" + tagName + " - Harmonista",
+		"pageDescription": "Descubra publicações sobre " + tagName + " na comunidade Harmonista.",
 	})
 }
 

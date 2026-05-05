@@ -217,6 +217,7 @@ func (b *BlogModule) page(c *gin.Context) {
 			"Title":     page.Title,
 			"Slug":      page.Slug,
 			"Content":   contentHTML,
+			"Summary":   stripHTMLAndMarkdown(string(contentHTML)),
 			"CreatedAt": page.CreatedAt,
 			"UpdatedAt": page.UpdatedAt,
 		},
@@ -332,6 +333,7 @@ func (b *BlogModule) post(c *gin.Context) {
 		"Title":     post.Title,
 		"Slug":      post.Slug,
 		"Content":   contentHTML,
+		"Summary":   stripHTMLAndMarkdown(string(contentHTML)),
 		"CreatedAt": post.CreatedAt,
 		"UpdatedAt": post.UpdatedAt,
 	}
@@ -382,4 +384,29 @@ func renderMarkdown(content string) string {
 		return content
 	}
 	return buf.String()
+}
+
+// stripHTMLAndMarkdown is a simple helper to provide a cleaner string for SEO meta tags.
+// It removes HTML tags and some common Markdown patterns.
+func stripHTMLAndMarkdown(content string) string {
+	// First, if it's already HTML (from renderMarkdown), strip tags.
+	// We'll use a simple regex for this.
+	reTags := regexp.MustCompile(`<[^>]*>`)
+	content = reTags.ReplaceAllString(content, "")
+
+	// Then remove some common markdown patterns that might remain if we passed raw markdown
+	reLinks := regexp.MustCompile(`\[([^\]]+)\]\([^\)]+\)`)
+	content = reLinks.ReplaceAllString(content, "$1")
+
+	reImages := regexp.MustCompile(`!\[([^\]]*)\]\([^\)]+\)`)
+	content = reImages.ReplaceAllString(content, "$1")
+
+	// Replace newlines with spaces
+	content = strings.ReplaceAll(content, "\n", " ")
+	content = strings.ReplaceAll(content, "\r", "")
+
+	// Trim whitespace
+	content = strings.TrimSpace(content)
+
+	return content
 }
