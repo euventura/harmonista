@@ -2,6 +2,8 @@ name: Deploy to Production
 
 on:
   push:
+    branches:
+      - master
     tags:
       - 'v*'  # Dispara quando criar tags como v1.0.0, v1.2.3, etc.
   workflow_dispatch:  # Permite execução manual pelo GitHub
@@ -78,9 +80,19 @@ jobs:
           ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
             "sudo systemctl stop harmonista 2>/dev/null || true"
 
-          # Enviar todos os arquivos e diretórios
+          # Enviar todos os arquivos e diretórios (--delete remove arquivos antigos, exceto .env e analytics.db)
           echo "Uploading application files..."
-          rsync -avz -e "ssh -i ~/.ssh/deploy_key" deploy/ "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
+          rsync -avz --delete \
+            --exclude='.env' \
+            --exclude='*.db' \
+            --exclude='*.db-shm' \
+            --exclude='*.db-wal' \
+            -e "ssh -i ~/.ssh/deploy_key" deploy/ "$SSH_USER@$SSH_HOST:/var/www/harmonista/"
+
+          # Limpar cache de páginas para forçar regeneração com novo código
+          echo "Clearing page cache..."
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
+            "rm -rf /var/www/harmonista/cache/* 2>/dev/null || true"
 
           # Verificar estrutura no servidor
           echo "Verifying deployment structure on server:"
