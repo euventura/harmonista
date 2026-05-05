@@ -24,6 +24,8 @@ cache/
 *.db-shm
 *.db-wal
 
+public/css/base.min.css
+
 *.log
 *.tmp
 *.temp

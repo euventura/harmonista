@@ -38,6 +38,7 @@ jobs:
       - name: Minify CSS
         run: |
           echo "Minifying CSS..."
+          rm -f public/css/base.min.css
           python3 scripts/minify_css.py
 
       - name: Set up SSH key

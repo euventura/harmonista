@@ -40,13 +40,13 @@
     <link rel="canonical" href="{{ domain }}{{ if .canonicalPath }}{{ .canonicalPath }}{{ else }}/{{ end }}">
     <title>{{ if .pageTitle }}{{ .pageTitle }}{{ else }}harmonista ⌐◯ᵔ◯ - Plataforma de Blog Minimalista : Para escrever e ler{{ end }}</title>
     
-    <link rel="preload" href="/public/css/base.min.css" as="style">
+    <link rel="preload" href="/public/css/base.min.css?v={{ version }}" as="style">
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap">
     </noscript>
-    <link rel="stylesheet" href="/public/css/base.min.css">
+    <link rel="stylesheet" href="/public/css/base.min.css?v={{ version }}">
 
 
     <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png">

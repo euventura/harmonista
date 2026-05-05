@@ -79,6 +79,9 @@ func main() {
 		"now": func() time.Time {
 			return time.Now()
 		},
+		"version": func() string {
+			return time.Now().Format("150405") // HHMMSS format for lightweight cache busting
+		},
 		"domain": func() string {
 			d := os.Getenv("DOMAIN")
 			if d == "" {
