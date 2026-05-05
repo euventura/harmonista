@@ -9,26 +9,31 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/valkey-io/valkey-go"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"harmonista/cache"
+	"harmonista/common"
 	"harmonista/models"
 )
 
 type BackofficeModule struct {
 	db *gorm.DB
+	vk valkey.Client
 }
 
-func NewBackofficeModule(db *gorm.DB) *BackofficeModule {
-	return &BackofficeModule{db: db}
+func NewBackofficeModule(db *gorm.DB, vk valkey.Client) *BackofficeModule {
+	return &BackofficeModule{db: db, vk: vk}
 }
 
 func (b *BackofficeModule) RegisterRoutes(router *gin.Engine) {
+	loginLimit := common.RateLimit(b.vk, "backoffice_login", 10, 15*time.Minute)
+
 	backofficeGroup := router.Group("/$")
 	{
 		backofficeGroup.GET("/login", b.loginPage)
-		backofficeGroup.POST("/login", b.loginPost)
+		backofficeGroup.POST("/login", loginLimit, b.loginPost)
 		backofficeGroup.GET("/index", b.requireBackofficeAuth, b.index)
 		backofficeGroup.POST("/toggle-list-reader/:blogID", b.requireBackofficeAuth, b.toggleListReader)
 		backofficeGroup.POST("/toggle-adult/:blogID", b.requireBackofficeAuth, b.toggleAdult)
@@ -36,7 +41,7 @@ func (b *BackofficeModule) RegisterRoutes(router *gin.Engine) {
 		backofficeGroup.POST("/clear-cache/:blogID", b.requireBackofficeAuth, b.clearBlogCache)
 		backofficeGroup.POST("/create-blog/:userID", b.requireBackofficeAuth, b.createBlog)
 		backofficeGroup.POST("/delete-user/:userID", b.requireBackofficeAuth, b.deleteUser)
-		backofficeGroup.GET("/logout", b.logout)
+		backofficeGroup.POST("/logout", b.logout)
 	}
 }
 
@@ -219,6 +224,7 @@ func (b *BackofficeModule) validateUser(c *gin.Context) {
 
 	user.EmailVerified = true
 	user.EmailVerificationToken = ""
+	user.EmailVerificationTokenExpiresAt = nil
 
 	if err := b.db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao validar usuário"})

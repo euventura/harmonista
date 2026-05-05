@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
-	htmlrenderer "github.com/yuin/goldmark/renderer/html"
 	"gorm.io/gorm"
 
 	"harmonista/analytics"
@@ -24,16 +23,25 @@ type BlogModule struct {
 	analytics *analytics.AnalyticsModule
 }
 
-// markdown renderer configured with Goldmark and useful extensions
+// markdown renderer configured with Goldmark and useful extensions.
+// Raw HTML in markdown is intentionally NOT allowed (no WithUnsafe) so that
+// untrusted user content cannot inject <script> or other elements.
 var md = goldmark.New(
 	goldmark.WithExtensions(
 		extension.GFM,     // tables, strikethrough, task lists, autolinks (GFM set)
 		extension.Linkify, // linkify raw URLs
 	),
-	goldmark.WithRendererOptions(
-		htmlrenderer.WithUnsafe(), // allow raw HTML passthrough in Markdown
-	),
 )
+
+// reCloseStyle matches a closing </style> tag in any case/whitespace combo.
+// Used as a render-time guard: even if a malicious theme is already stored,
+// it cannot break out of the surrounding <style> element.
+var reCloseStyle = regexp.MustCompile(`(?i)</\s*style\s*>`)
+
+func sanitizeThemeCSS(css string) string {
+	css = reCloseStyle.ReplaceAllString(css, "")
+	return strings.ReplaceAll(css, "<", "")
+}
 
 type NavLink struct {
 	Text string
@@ -145,7 +153,7 @@ func (b *BlogModule) index(c *gin.Context) {
 		"navLinks":            navLinks,
 		"blogDescriptionHTML": template.HTML(renderMarkdown(blog.Description)),
 		"previewCSS":          previewCSS,
-		"blogThemeCSS":        template.CSS(blog.Theme),
+		"blogThemeCSS":        template.CSS(sanitizeThemeCSS(blog.Theme)),
 		"blogURL":             blogURL,
 	})
 }
@@ -214,7 +222,7 @@ func (b *BlogModule) page(c *gin.Context) {
 		},
 		"navLinks":     navLinks,
 		"previewCSS":   previewCSS,
-		"blogThemeCSS": template.CSS(blog.Theme),
+		"blogThemeCSS": template.CSS(sanitizeThemeCSS(blog.Theme)),
 		"pageURL":      pageURL,
 		"blogURL":      blogURL,
 	})
@@ -261,7 +269,7 @@ func (b *BlogModule) tag(c *gin.Context) {
 		"navLinks":            navLinks,
 		"blogDescriptionHTML": template.HTML(renderMarkdown(blog.Description)),
 		"previewCSS":          previewCSS,
-		"blogThemeCSS":        template.CSS(blog.Theme),
+		"blogThemeCSS":        template.CSS(sanitizeThemeCSS(blog.Theme)),
 	})
 }
 
@@ -357,7 +365,7 @@ func (b *BlogModule) post(c *gin.Context) {
 		"replies":      repliesData,
 		"navLinks":     navLinks,
 		"previewCSS":   previewCSS,
-		"blogThemeCSS": template.CSS(blog.Theme),
+		"blogThemeCSS": template.CSS(sanitizeThemeCSS(blog.Theme)),
 		"postURL":      postURL,
 		"blogURL":      blogURL,
 	})

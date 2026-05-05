@@ -2,8 +2,10 @@ package site
 
 import (
 	"fmt"
+	"html"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +16,18 @@ import (
 
 	"harmonista/models"
 )
+
+// xmlSafeURL escapes a value used inside an XML <loc> element. The path
+// segments are percent-encoded so user-controlled tokens (slugs, subdomains,
+// tag names) cannot break out of the element.
+func xmlSafeURL(s string) string {
+	return html.EscapeString(s)
+}
+
+// pathEscapeSegment percent-encodes a single path segment.
+func pathEscapeSegment(s string) string {
+	return url.PathEscape(s)
+}
 
 type SiteModule struct {
 	db *gorm.DB
@@ -158,29 +172,30 @@ func (s *SiteModule) sitemap(c *gin.Context) {
 
 	// Add main site pages
 	sitemap.WriteString("  <url>\n")
-	sitemap.WriteString("    <loc>" + domain + "/</loc>\n")
+	sitemap.WriteString("    <loc>" + xmlSafeURL(domain+"/") + "</loc>\n")
 	sitemap.WriteString("    <changefreq>weekly</changefreq>\n")
 	sitemap.WriteString("    <priority>1.0</priority>\n")
 	sitemap.WriteString("  </url>\n")
 
 	sitemap.WriteString("  <url>\n")
-	sitemap.WriteString("    <loc>" + domain + "/leia</loc>\n")
+	sitemap.WriteString("    <loc>" + xmlSafeURL(domain+"/leia") + "</loc>\n")
 	sitemap.WriteString("    <changefreq>daily</changefreq>\n")
 	sitemap.WriteString("    <priority>0.8</priority>\n")
 	sitemap.WriteString("  </url>\n")
 
 	for _, blogID := range blogIDs {
-		subdomain := blogSubdomains[blogID]
+		subdomain := pathEscapeSegment(blogSubdomains[blogID])
 
 		sitemap.WriteString("  <url>\n")
-		sitemap.WriteString("    <loc>" + domain + "/@/" + subdomain + "/</loc>\n")
+		sitemap.WriteString("    <loc>" + xmlSafeURL(domain+"/@/"+subdomain+"/") + "</loc>\n")
 		sitemap.WriteString("    <changefreq>weekly</changefreq>\n")
 		sitemap.WriteString("    <priority>0.7</priority>\n")
 		sitemap.WriteString("  </url>\n")
 
 		for _, post := range blogPosts[blogID] {
+			slug := pathEscapeSegment(post.Slug)
 			sitemap.WriteString("  <url>\n")
-			sitemap.WriteString("    <loc>" + domain + "/@/" + subdomain + "/" + post.Slug + "</loc>\n")
+			sitemap.WriteString("    <loc>" + xmlSafeURL(domain+"/@/"+subdomain+"/"+slug) + "</loc>\n")
 			sitemap.WriteString("    <lastmod>" + post.UpdatedAt.Format(time.RFC3339) + "</lastmod>\n")
 			sitemap.WriteString("    <changefreq>monthly</changefreq>\n")
 			sitemap.WriteString("    <priority>0.6</priority>\n")
@@ -188,8 +203,9 @@ func (s *SiteModule) sitemap(c *gin.Context) {
 		}
 
 		for _, page := range pagesByBlog[blogID] {
+			slug := pathEscapeSegment(page.Slug)
 			sitemap.WriteString("  <url>\n")
-			sitemap.WriteString("    <loc>" + domain + "/@/" + subdomain + "/p/" + page.Slug + "</loc>\n")
+			sitemap.WriteString("    <loc>" + xmlSafeURL(domain+"/@/"+subdomain+"/p/"+slug) + "</loc>\n")
 			sitemap.WriteString("    <lastmod>" + page.UpdatedAt.Format(time.RFC3339) + "</lastmod>\n")
 			sitemap.WriteString("    <changefreq>monthly</changefreq>\n")
 			sitemap.WriteString("    <priority>0.5</priority>\n")
@@ -206,8 +222,9 @@ func (s *SiteModule) sitemap(c *gin.Context) {
 		Pluck("post_tags.tag_name", &tags)
 
 	for _, tag := range tags {
+		safeTag := pathEscapeSegment(tag)
 		sitemap.WriteString("  <url>\n")
-		sitemap.WriteString("    <loc>" + domain + "/leia/" + tag + "</loc>\n")
+		sitemap.WriteString("    <loc>" + xmlSafeURL(domain+"/leia/"+safeTag) + "</loc>\n")
 		sitemap.WriteString("    <changefreq>weekly</changefreq>\n")
 		sitemap.WriteString("    <priority>0.4</priority>\n")
 		sitemap.WriteString("  </url>\n")

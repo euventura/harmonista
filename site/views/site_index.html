@@ -1,9 +1,9 @@
 {{ template "site_header.html" .}}
 
-<section>
+<section class="site-hero">
 
-    <p>Micro plataforma para escrever <strong>texto</strong>. Sem algoritimos, trackers, js ou propaganda</p>
-    <h4>Um lugar para ler e ser lido. Sempre gratuito</h4>
+    <p class="hero-pitch">Micro plataforma para escrever <strong>texto</strong>. Sem algoritimos, trackers, js ou propaganda</p>
+    <h4 class="hero-sub">Um lugar para ler e ser lido. Sempre gratuito</h4>
 
     <h5>Ler e escrever as suas ideias, pelas suas mãos. <a href="/cadastrar">Crie seu espaço</a></h5>
     <br>
@@ -23,12 +23,11 @@
         {{ end }}
     </dl>
 
-
-    <a href="/leia">Descubra outras leituras</a>
-    <br>
-    <a href="/login">Entre</a>
-    <br>
-    <a href="/cadastrar">Cadastre-se</a>
+    <nav class="cta-links">
+        <a href="/leia">Descubra outras leituras</a>
+        <a href="/login">Entre</a>
+        <a href="/cadastrar">Cadastre-se</a>
+    </nav>
 </section>
 {{ end }}
 

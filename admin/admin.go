@@ -15,33 +15,85 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/valkey-io/valkey-go"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"harmonista/analytics"
 	"harmonista/cache"
+	"harmonista/common"
 	emailpkg "harmonista/email"
 	"harmonista/models"
 )
 
+// validSubdomain enforces a safe DNS-label format: lower-case alphanumeric and
+// hyphens, 1-63 chars, must start/end alphanumeric.
+var validSubdomain = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
+
+// validThemeFilename allows only "<name>.css" with no directory components.
+var validThemeFilename = regexp.MustCompile(`^[a-zA-Z0-9_-]+\.css$`)
+
+// reservedSubdomains cannot be claimed by users.
+var reservedSubdomains = map[string]struct{}{
+	"www": {}, "admin": {}, "api": {}, "mail": {}, "ftp": {}, "smtp": {},
+	"app": {}, "auth": {}, "login": {}, "blog": {}, "static": {},
+	"public": {}, "assets": {}, "cdn": {}, "ns": {}, "ns1": {}, "ns2": {},
+	"localhost": {}, "root": {}, "support": {},
+}
+
+// minPasswordLength is the minimum allowed password length at signup or
+// password change. bcrypt itself caps at 72 bytes; we don't enforce a
+// max here because the user pays the cost in their own browser.
+const minPasswordLength = 8
+
+func isValidPassword(p string) bool {
+	return len(p) >= minPasswordLength
+}
+
+func isValidSubdomain(s string) bool {
+	if !validSubdomain.MatchString(s) {
+		return false
+	}
+	if _, reserved := reservedSubdomains[s]; reserved {
+		return false
+	}
+	return true
+}
+
+// sanitizeThemeCSS prevents the theme content from breaking out of the
+// surrounding <style> element. We strip anything that could close the tag
+// (case-insensitive) and any '<' to keep the value strictly inside CSS.
+func sanitizeThemeCSS(css string) string {
+	css = reCloseStyle.ReplaceAllString(css, "")
+	return strings.ReplaceAll(css, "<", "")
+}
+
+var reCloseStyle = regexp.MustCompile(`(?i)</\s*style\s*>`)
+
 type AdminModule struct {
 	db        *gorm.DB
 	analytics *analytics.AnalyticsModule
+	vk        valkey.Client
 }
 
-func NewAdminModule(db *gorm.DB, analyticsModule *analytics.AnalyticsModule) *AdminModule {
+func NewAdminModule(db *gorm.DB, analyticsModule *analytics.AnalyticsModule, vk valkey.Client) *AdminModule {
 	return &AdminModule{
 		db:        db,
 		analytics: analyticsModule,
+		vk:        vk,
 	}
 }
 
 func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
+	loginLimit := common.RateLimit(a.vk, "login", 10, 15*time.Minute)
+	cadastroLimit := common.RateLimit(a.vk, "cadastro", 5, time.Hour)
+	confirmLimit := common.RateLimit(a.vk, "confirm", 30, 5*time.Minute)
+
 	router.GET("/login", a.loginPage)
-	router.POST("/login", a.loginPost)
+	router.POST("/login", loginLimit, a.loginPost)
 	router.GET("/cadastrar", a.cadastroPage)
-	router.POST("/cadastro", a.cadastroPost)
-	router.GET("/confirmar/:token", a.confirmEmail)
+	router.POST("/cadastro", cadastroLimit, a.cadastroPost)
+	router.GET("/confirmar/:token", confirmLimit, a.confirmEmail)
 	router.GET("/admin", a.adminRoot)
 	router.POST("/admin/responder", a.replyIntent)
 
@@ -77,7 +129,7 @@ func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
 	}
 
 	router.GET("/admin/dashboard", a.requireAuth, a.dashboard)
-	router.GET("/admin/logout", a.logout)
+	router.POST("/admin/logout", a.logout)
 
 }
 
@@ -257,7 +309,7 @@ func (a *AdminModule) cadastroPage(c *gin.Context) {
 func (a *AdminModule) cadastroPost(c *gin.Context) {
 	email := c.PostForm("email")
 	password := c.PostForm("password")
-	subdomain := c.PostForm("subdomain")
+	subdomain := strings.ToLower(strings.TrimSpace(c.PostForm("subdomain")))
 	title := c.PostForm("title")
 	description := c.PostForm("description")
 
@@ -269,17 +321,35 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 		"description": description,
 	}
 
-	var existingUser models.User
-	if err := a.db.Where("email = ?", email).First(&existingUser).Error; err == nil {
-		formData["error"] = "Este email já está cadastrado"
+	if !isValidSubdomain(subdomain) {
+		formData["error"] = "Subdomínio inválido. Use apenas letras minúsculas, números e hífen (3-63 caracteres)."
 		c.HTML(http.StatusBadRequest, "admin_cadastro.html", formData)
 		return
 	}
 
+	if !isValidPassword(password) {
+		formData["error"] = fmt.Sprintf("A senha precisa ter pelo menos %d caracteres.", minPasswordLength)
+		c.HTML(http.StatusBadRequest, "admin_cadastro.html", formData)
+		return
+	}
+
+	// Subdomínio precisa ser único e checado antes (não é segredo: qualquer
+	// um pode visitar o blog para ver se existe).
 	var existingBlog models.Blog
 	if err := a.db.Where("subdomain = ?", subdomain).First(&existingBlog).Error; err == nil {
 		formData["error"] = "Este subdomínio já está em uso"
 		c.HTML(http.StatusBadRequest, "admin_cadastro.html", formData)
+		return
+	}
+
+	// Para evitar enumeração de contas, NÃO sinalizamos quando o email já
+	// existe. Mostramos a tela de sucesso normal e seguimos sem criar
+	// duplicata. (Idealmente também enviaríamos um aviso ao endereço.)
+	var existingUser models.User
+	if err := a.db.Where("email = ?", email).First(&existingUser).Error; err == nil {
+		c.HTML(http.StatusOK, "admin_cadastro_success.html", gin.H{
+			"email": email,
+		})
 		return
 	}
 
@@ -298,11 +368,13 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 		return
 	}
 
+	tokenExpiry := time.Now().Add(48 * time.Hour)
 	user := models.User{
-		Email:                  email,
-		PasswordHash:           passwordHash,
-		EmailVerified:          false,
-		EmailVerificationToken: verificationToken,
+		Email:                           email,
+		PasswordHash:                    passwordHash,
+		EmailVerified:                   false,
+		EmailVerificationToken:          verificationToken,
+		EmailVerificationTokenExpiresAt: &tokenExpiry,
 	}
 
 	if err := a.db.Create(&user).Error; err != nil {
@@ -347,6 +419,14 @@ func (a *AdminModule) cadastroPost(c *gin.Context) {
 func (a *AdminModule) confirmEmail(c *gin.Context) {
 	token := c.Param("token")
 
+	if token == "" {
+		c.HTML(http.StatusNotFound, "admin_confirm_email.html", gin.H{
+			"success": false,
+			"message": "Token inválido ou expirado",
+		})
+		return
+	}
+
 	var user models.User
 	if err := a.db.Where("email_verification_token = ?", token).First(&user).Error; err != nil {
 		c.HTML(http.StatusNotFound, "admin_confirm_email.html", gin.H{
@@ -364,8 +444,17 @@ func (a *AdminModule) confirmEmail(c *gin.Context) {
 		return
 	}
 
+	if user.EmailVerificationTokenExpiresAt != nil && time.Now().After(*user.EmailVerificationTokenExpiresAt) {
+		c.HTML(http.StatusGone, "admin_confirm_email.html", gin.H{
+			"success": false,
+			"message": "Token inválido ou expirado",
+		})
+		return
+	}
+
 	user.EmailVerified = true
 	user.EmailVerificationToken = ""
+	user.EmailVerificationTokenExpiresAt = nil
 
 	if err := a.db.Save(&user).Error; err != nil {
 		c.HTML(http.StatusInternalServerError, "admin_confirm_email.html", gin.H{
@@ -448,7 +537,7 @@ func (a *AdminModule) saveTheme(c *gin.Context) {
 	blog := blogData.(*models.Blog)
 
 	theme := c.PostForm("theme")
-	blog.Theme = theme
+	blog.Theme = sanitizeThemeCSS(theme)
 
 	if err := a.db.Save(blog).Error; err != nil {
 		c.HTML(http.StatusInternalServerError, "admin_error.html", gin.H{
@@ -475,7 +564,12 @@ func (a *AdminModule) applyTheme(c *gin.Context) {
 		return
 	}
 
-	// Ler o conteúdo do arquivo CSS
+	// Aceitar apenas nomes simples como "foo.css" - sem subpastas, sem traversal
+	if !validThemeFilename.MatchString(themePath) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nome de tema inválido"})
+		return
+	}
+
 	fullPath := filepath.Join("./public/css/temas", themePath)
 	cssContent, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -483,8 +577,7 @@ func (a *AdminModule) applyTheme(c *gin.Context) {
 		return
 	}
 
-	// Salvar o conteúdo em blog.Theme
-	blog.Theme = string(cssContent)
+	blog.Theme = sanitizeThemeCSS(string(cssContent))
 	if err := a.db.Save(blog).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar tema"})
 		return
@@ -569,7 +662,7 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 	blog := blogData.(*models.Blog)
 	userID := c.GetInt("user_id")
 
-	newSubdomain := c.PostForm("subdomain")
+	newSubdomain := strings.ToLower(strings.TrimSpace(c.PostForm("subdomain")))
 	nav := c.PostForm("nav")
 	password := c.PostForm("password")
 	isAdult := c.PostForm("isAdult") == "1"
@@ -577,6 +670,13 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 
 	// Validate subdomain change if different
 	if newSubdomain != blog.Subdomain {
+		if !isValidSubdomain(newSubdomain) {
+			c.HTML(http.StatusBadRequest, "admin_config.html", gin.H{
+				"error": "Subdomínio inválido. Use apenas letras minúsculas, números e hífen (3-63 caracteres).",
+				"blog":  blog,
+			})
+			return
+		}
 		var existingBlog models.Blog
 		if err := a.db.Where("subdomain = ?", newSubdomain).First(&existingBlog).Error; err == nil {
 			c.HTML(http.StatusBadRequest, "admin_config.html", gin.H{
@@ -602,6 +702,13 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 
 	// Update password if provided
 	if password != "" {
+		if !isValidPassword(password) {
+			c.HTML(http.StatusBadRequest, "admin_config.html", gin.H{
+				"error": fmt.Sprintf("A senha precisa ter pelo menos %d caracteres.", minPasswordLength),
+				"blog":  blog,
+			})
+			return
+		}
 		var user models.User
 		if err := a.db.First(&user, userID).Error; err != nil {
 			c.HTML(http.StatusInternalServerError, "admin_config.html", gin.H{

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -57,9 +58,13 @@ func main() {
 		MaxAge:   86400 * 7,
 		HttpOnly: true,
 		Secure:   strings.HasPrefix(os.Getenv("DOMAIN"), "https"),
+		SameSite: http.SameSiteStrictMode,
 	})
 
 	router.Use(sessions.Sessions("harmonista-session", store))
+
+	// CSRF: bloquear POST/PUT/DELETE/PATCH cross-origin checando Origin/Referer
+	router.Use(common.CSRFOriginCheck())
 
 	// Redirecionar www para non-www (deve vir primeiro)
 	router.Use(common.WWWRedirectMiddleware())
@@ -90,10 +95,10 @@ func main() {
 	siteModule := site.NewSiteModule(db)
 	siteModule.RegisterRoutes(router)
 
-	adminModule := admin.NewAdminModule(db, analyticsModule)
+	adminModule := admin.NewAdminModule(db, analyticsModule, valkeyClient)
 	adminModule.RegisterRoutes(router)
 
-	backofficeModule := backoffice.NewBackofficeModule(db)
+	backofficeModule := backoffice.NewBackofficeModule(db, valkeyClient)
 	backofficeModule.RegisterRoutes(router)
 
 	blogModule := blog.NewBlogModule(db, analyticsModule)

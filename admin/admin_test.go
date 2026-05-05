@@ -106,7 +106,7 @@ func TestGenerateSlug(t *testing.T) {
 
 func TestRequireAuth_Unauthorized(t *testing.T) {
 	db := setupTestDB()
-	adminModule := NewAdminModule(db, nil)
+	adminModule := NewAdminModule(db, nil, nil)
 	router := setupTestRouter(adminModule)
 
 	req, _ := http.NewRequest("GET", "/admin/testblog/", nil)
@@ -120,7 +120,7 @@ func TestRequireAuth_Unauthorized(t *testing.T) {
 
 func TestIndex_BlogNotFound(t *testing.T) {
 	db := setupTestDB()
-	adminModule := NewAdminModule(db, nil)
+	adminModule := NewAdminModule(db, nil, nil)
 	router := setupTestRouter(adminModule)
 
 	createTestUser(db)
@@ -223,7 +223,7 @@ func TestDeletePost(t *testing.T) {
 
 func TestCreateOrAssignTag(t *testing.T) {
 	db := setupTestDB()
-	adminModule := NewAdminModule(db, nil)
+	adminModule := NewAdminModule(db, nil, nil)
 
 	user := createTestUser(db)
 	blog := createTestBlog(db, user.ID)
@@ -273,7 +273,7 @@ func TestGenerateToken(t *testing.T) {
 
 func TestProcessPostTags(t *testing.T) {
 	db := setupTestDB()
-	adminModule := NewAdminModule(db, nil)
+	adminModule := NewAdminModule(db, nil, nil)
 
 	user := createTestUser(db)
 	blog := createTestBlog(db, user.ID)

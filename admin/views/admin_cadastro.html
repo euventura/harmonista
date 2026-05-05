@@ -20,13 +20,14 @@
     </label>
 
     <label for="subdomain" class="width">
-        Subdomínio do Blog
-        <input type="text" id="subdomain" name="subdomain" value="{{ .subdomain }}" required pattern="[a-z0-9-]+" placeholder="meublog">
-        <small>.harmonista.org</small>
+        Endereço do blog
+        <input type="text" id="subdomain" name="subdomain" value="{{ .subdomain }}" required pattern="[a-z0-9-]+"
+            placeholder="meublog">
+        <small>.harmonista.org/@/{{ .subdomain }}</small>
     </label>
 
     <label for="title" class="width">
-        Título do Blog
+        Título do blog
         <input type="text" id="title" name="title" value="{{ .title }}" required placeholder="Meu Blog Incrível">
     </label>
 

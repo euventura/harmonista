@@ -13,18 +13,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
-	htmlrenderer "github.com/yuin/goldmark/renderer/html"
 )
 
-// markdown renderer configured with Goldmark and useful extensions
-// Duplicated from blog package to keep modules decoupled
+// Markdown renderer for the aggregated RSS feed. Raw HTML pass-through is
+// intentionally disabled so user content cannot inject scripts into the feed.
 var md = goldmark.New(
 	goldmark.WithExtensions(
-		extension.GFM,     // tables, strikethrough, task lists, autolinks (GFM set)
-		extension.Linkify, // linkify raw URLs
-	),
-	goldmark.WithRendererOptions(
-		htmlrenderer.WithUnsafe(), // allow raw HTML passthrough in Markdown
+		extension.GFM,
+		extension.Linkify,
 	),
 )
 

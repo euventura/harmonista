@@ -3,12 +3,13 @@ package models
 import "time"
 
 type User struct {
-	ID                     int    `gorm:"primary_key;autoIncrement" json:"id"`
-	PasswordHash           string `gorm:"not null" json:"-"` // json:"-" prevents password from being exposed in API
-	Email                  string `gorm:"unique;not null" json:"email"`
-	EmailVerified          bool   `gorm:"default:false" json:"email_verified"`
-	EmailVerificationToken string `json:"-"` // token for email verification
-	SessionToken           string `json:"-"` // for session management
+	ID                              int        `gorm:"primary_key;autoIncrement" json:"id"`
+	PasswordHash                    string     `gorm:"not null" json:"-"` // json:"-" prevents password from being exposed in API
+	Email                           string     `gorm:"unique;not null" json:"email"`
+	EmailVerified                   bool       `gorm:"default:false" json:"email_verified"`
+	EmailVerificationToken          string     `json:"-"` // token for email verification
+	EmailVerificationTokenExpiresAt *time.Time `json:"-"` // expiry of the verification token
+	SessionToken                    string     `json:"-"` // for session management
 }
 
 type Blog struct {

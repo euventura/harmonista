@@ -5,8 +5,9 @@
     <form action="/admin/{{.subdomain}}/config" method="POST">
         <fieldset>
             <label for="subdomain" class="width">
-                subdominio
-                <input type="text" id="subdomain" name="subdomain" value="{{.blog.Subdomain}}" required>     <small>.harmonista.org</small>
+                Endereço
+                <input type="text" id="subdomain" name="subdomain" value="" required>
+                <small>harmonista.org/@/{{.blog.Subdomain}}</small>
             </label>
 
             <label>

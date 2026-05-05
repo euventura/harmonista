@@ -104,25 +104,18 @@ func (e *EmailService) sendMailViaAPI(to, subject, textBody string) error {
 	}
 
 	log.Printf("Enviando email via API Mailtrap para %s", to)
-	log.Printf("Payload JSON: %s", string(jsonData))
 
-	// Verificar se temos token
 	if e.password == "" {
 		return fmt.Errorf("SMTP_PASSWORD (API token) não está configurado")
 	}
 
-	log.Printf("Token API: %s (tamanho: %d chars)", e.password, len(e.password))
-
-	// Criar requisição HTTP
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("erro ao criar requisição: %v", err)
 	}
 
-	// Headers
 	req.Header.Set("Authorization", "Bearer "+e.password)
 	req.Header.Set("Content-Type", "application/json")
-	log.Printf("Headers configurados: Content-Type=application/json, Authorization=Bearer [token]")
 
 	// Enviar requisição
 	client := &http.Client{}
@@ -145,7 +138,6 @@ func (e *EmailService) sendMailViaAPI(to, subject, textBody string) error {
 	}
 
 	log.Printf("Email enviado com sucesso via API Mailtrap para %s", to)
-	log.Printf("Resposta da API: %s", string(bodyBytes))
 	return nil
 }
 

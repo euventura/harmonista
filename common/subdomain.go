@@ -95,7 +95,8 @@ func SubdomainMiddleware() gin.HandlerFunc {
 						newPath := envDomain + "/@/" + possibleSubdomain + originalPath
 
 						c.Redirect(http.StatusMovedPermanently, newPath)
-
+						c.Abort()
+						return
 					}
 				}
 			}
