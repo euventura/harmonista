@@ -874,6 +874,13 @@ func (a *AdminModule) savePost(c *gin.Context) {
 		return
 	}
 
+	// Limpar cache da home se o post foi publicado
+	if !draft {
+		if err := cache.ClearHomeCache(); err != nil {
+			log.Printf("Erro ao limpar cache da home: %v", err)
+		}
+	}
+
 	// Se for uma resposta, limpar cache do post pai
 	if replyToIDStr != "" {
 		if replyToID, err := strconv.Atoi(replyToIDStr); err == nil {
@@ -1069,6 +1076,11 @@ func (a *AdminModule) updatePost(c *gin.Context) {
 		log.Printf("Erro ao limpar cache do post %d: %v", post.ID, err)
 	}
 
+	// Limpar cache da home (qualquer alteração em post pode afetar listagem da home)
+	if err := cache.ClearHomeCache(); err != nil {
+		log.Printf("Erro ao limpar cache da home: %v", err)
+	}
+
 	// Se for uma resposta, limpar cache do post pai também
 	if post.ReplyPostID != nil {
 		if err := cache.ClearCacheByPostID(a.db, *post.ReplyPostID); err != nil {
@@ -1116,6 +1128,14 @@ func (a *AdminModule) deletePost(c *gin.Context) {
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post não encontrado"})
 		return
+	}
+
+	// Limpar cache do post deletado e da home
+	if err := cache.ClearCache(blog.Subdomain, post.Slug); err != nil {
+		log.Printf("Erro ao limpar cache do post %d: %v", post.ID, err)
+	}
+	if err := cache.ClearHomeCache(); err != nil {
+		log.Printf("Erro ao limpar cache da home: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Post deletado com sucesso"})

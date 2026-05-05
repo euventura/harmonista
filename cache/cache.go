@@ -90,6 +90,11 @@ func ClearCacheByPostID(db *gorm.DB, postID int) error {
 	return ClearCache(post.Blog.Subdomain, post.Slug)
 }
 
+// ClearHomeCache removes the cached home page (site/index)
+func ClearHomeCache() error {
+	return ClearCache("site", "index")
+}
+
 // ClearCacheBySlugs removes cache files matching a glob pattern in subdomain directory
 func ClearCacheBySlugs(subdomain string, slugs ...string) error {
 	cacheDir := filepath.Join("cache", subdomain)
