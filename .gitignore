@@ -36,3 +36,4 @@ Thumbs.db
 *.swp
 *.swo
 .claude
+public/css/base.min.css
