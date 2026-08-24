@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -18,12 +19,14 @@ import (
 func RateLimit(vk valkey.Client, scope string, limit int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if vk == nil {
+			log.Printf("DEBUG: RateLimit called with nil Valkey client for scope=%s", scope)
 			c.Next()
 			return
 		}
 
 		ip := c.ClientIP()
 		if ip == "" {
+			log.Printf("DEBUG: RateLimit empty IP for scope=%s", scope)
 			c.Next()
 			return
 		}
@@ -33,16 +36,20 @@ func RateLimit(vk valkey.Client, scope string, limit int, window time.Duration) 
 
 		count, err := vk.Do(ctx, vk.B().Incr().Key(key).Build()).ToInt64()
 		if err != nil {
+			log.Printf("ERROR: RateLimit INCR failed for key=%s: %v", key, err)
 			c.Next()
 			return
 		}
 
 		// Set expiry only on the first hit of the window.
 		if count == 1 {
-			_ = vk.Do(ctx, vk.B().Expire().Key(key).Seconds(int64(window.Seconds())).Build()).Error()
+			if err := vk.Do(ctx, vk.B().Expire().Key(key).Seconds(int64(window.Seconds())).Build()).Error(); err != nil {
+				log.Printf("ERROR: RateLimit EXPIRE failed for key=%s: %v", key, err)
+			}
 		}
 
 		if count > int64(limit) {
+			log.Printf("DEBUG: RateLimit exceeded for key=%s, count=%d, limit=%d", key, count, limit)
 			c.Header("Retry-After", "60")
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"error": "Muitas tentativas. Tente novamente em alguns minutos.",

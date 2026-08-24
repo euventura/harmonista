@@ -77,18 +77,20 @@ func ConnectValkey() valkey.Client {
 		opts.TLSConfig = &tls.Config{}
 	}
 
+	log.Printf("Attempting to connect to Valkey at %s (TLS: %v, DB: %v)", addr, useTLS, opts.SelectDB)
 	client, err := valkey.NewClient(opts)
 	if err != nil {
-		log.Printf("Error connecting to Valkey at %s: %v - analytics will be disabled", addr, err)
+		log.Printf("ERROR: Failed to create Valkey client for %s: %v - analytics will be disabled", addr, err)
 		return nil
 	}
 
+	log.Printf("Valkey client created, attempting ping to %s", addr)
 	if err := client.Do(context.Background(), client.B().Ping().Build()).Error(); err != nil {
-		log.Printf("Error pinging Valkey at %s: %v - analytics will be disabled", addr, err)
+		log.Printf("ERROR: Valkey ping failed for %s: %v - analytics will be disabled", addr, err)
 		client.Close()
 		return nil
 	}
 
-	log.Printf("Connected to Valkey (%s)", addr)
+	log.Printf("SUCCESS: Connected to Valkey (%s)", addr)
 	return client
 }

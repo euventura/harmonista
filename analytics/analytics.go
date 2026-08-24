@@ -26,11 +26,11 @@ type AnalyticsModule struct {
 // NewAnalyticsModule cria uma nova instância do módulo de analytics
 func NewAnalyticsModule(vk valkey.Client) *AnalyticsModule {
 	if vk == nil {
-		log.Println("Valkey is nil, analytics will be disabled")
+		log.Println("WARNING: Valkey client is nil, analytics will be disabled")
 		return nil
 	}
 
-	log.Println("Analytics module initialized successfully (Valkey)")
+	log.Println("SUCCESS: Analytics module initialized with Valkey client")
 	return &AnalyticsModule{vk: vk}
 }
 
@@ -42,12 +42,16 @@ func key(blog, page string) string {
 // TrackVisit incrementa o contador de visitas para uma página
 func (a *AnalyticsModule) TrackVisit(blog string, page string) {
 	if a == nil || a.vk == nil {
+		log.Printf("DEBUG: TrackVisit called with nil module for blog=%s, page=%s", blog, page)
 		return
 	}
 
+	log.Printf("DEBUG: Tracking visit for blog=%s, page=%s, key=%s", blog, page, key(blog, page))
 	go func() {
 		if err := a.vk.Do(ctx, a.vk.B().Incr().Key(key(blog, page)).Build()).Error(); err != nil {
-			log.Printf("Error tracking visit for %s/%s: %v", blog, page, err)
+			log.Printf("ERROR: Failed to track visit for %s/%s: %v", blog, page, err)
+		} else {
+			log.Printf("DEBUG: Successfully tracked visit for %s/%s", blog, page)
 		}
 	}()
 }
@@ -55,13 +59,17 @@ func (a *AnalyticsModule) TrackVisit(blog string, page string) {
 // GetPageVisits retorna o número de visitas de uma página específica
 func (a *AnalyticsModule) GetPageVisits(blog string, page string) int64 {
 	if a == nil || a.vk == nil {
+		log.Printf("DEBUG: GetPageVisits called with nil module for blog=%s, page=%s", blog, page)
 		return 0
 	}
 
+	log.Printf("DEBUG: Getting page visits for blog=%s, page=%s, key=%s", blog, page, key(blog, page))
 	val, err := a.vk.Do(ctx, a.vk.B().Get().Key(key(blog, page)).Build()).AsInt64()
 	if err != nil {
+		log.Printf("ERROR: Failed to get page visits for %s/%s: %v", blog, page, err)
 		return 0
 	}
+	log.Printf("DEBUG: Page visits for %s/%s: %d", blog, page, val)
 	return val
 }
 
@@ -74,15 +82,19 @@ func (a *AnalyticsModule) GetAllBlogVisits(blog string) map[string]int64 {
 	result := make(map[string]int64)
 	prefix := "analytics." + blog + "."
 
+	log.Printf("DEBUG: Scanning all blog visits for blog=%s, prefix=%s", blog, prefix)
 	var cursor uint64
 	for {
 		entry, err := a.vk.Do(ctx, a.vk.B().Scan().Cursor(cursor).Match(prefix+"*").Count(100).Build()).AsScanEntry()
 		if err != nil {
+			log.Printf("ERROR: Failed to scan blog visits for %s: %v", blog, err)
 			break
 		}
+		log.Printf("DEBUG: Scan returned %d keys, cursor=%d", len(entry.Elements), entry.Cursor)
 		for _, k := range entry.Elements {
 			val, err := a.vk.Do(ctx, a.vk.B().Get().Key(k).Build()).AsInt64()
 			if err != nil {
+				log.Printf("WARNING: Failed to get value for key %s: %v", k, err)
 				continue
 			}
 			page := strings.TrimPrefix(k, prefix)
@@ -90,6 +102,7 @@ func (a *AnalyticsModule) GetAllBlogVisits(blog string) map[string]int64 {
 		}
 		cursor = entry.Cursor
 		if cursor == 0 {
+			log.Printf("DEBUG: Scan complete for blog=%s, total keys found=%d", blog, len(result))
 			break
 		}
 	}
