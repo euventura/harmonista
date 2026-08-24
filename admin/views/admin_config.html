@@ -32,5 +32,36 @@
     </form>
 </section>
 
+<section>
+    <h2>Página Inicial</h2>
+    <form action="/admin/{{.subdomain}}/config" method="POST">
+        <label for="title" class="width">
+            Título do Blog
+            <input type="text" id="title" name="title" value="{{if .blog}}{{.blog.Title}}{{end}}" required>
+        </label>
+
+        <label for="description">
+            Página inicial (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
+            <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25"></textarea>
+        </label>
+
+        <button type="submit">Salvar</button>
+    </form>
+</section>
+
+{{ template "tinymde_component.html" .}}
+
+<script>
+    const easyMDEManager = new EasyMDEManager({
+        textareaId: 'description',
+        autoSaveUrl: null
+    });
+
+    {{if .blog}}
+        {{if .blog.Description}}
+            easyMDEManager.setContent('{{.blog.Description}}');
+        {{end}}
+    {{end}}
+</script>
 
 {{ template "admin_footer.html" .}}

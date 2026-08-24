@@ -101,7 +101,6 @@ func (a *AdminModule) RegisterRoutes(router *gin.Engine) {
 	adminGroup.Use(a.requireAuth, a.loadBlog)
 	{
 		adminGroup.GET("/", a.index)
-		adminGroup.POST("/inicio", a.updateBlogSettings)
 		adminGroup.GET("/posts", a.listPosts)
 		adminGroup.GET("/post/novo", a.newPost)
 		adminGroup.POST("/post/salvar", a.savePost)
@@ -667,6 +666,8 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 	password := c.PostForm("password")
 	isAdult := c.PostForm("isAdult") == "1"
 	isListReader := c.PostForm("IsListReader") == "1"
+	title := c.PostForm("title")
+	description := c.PostForm("description")
 
 	// Validate subdomain change if different
 	if newSubdomain != blog.Subdomain {
@@ -691,6 +692,8 @@ func (a *AdminModule) updateConfig(c *gin.Context) {
 	blog.Nav = nav
 	blog.IsAdult = isAdult
 	blog.IsListReader = isListReader
+	blog.Title = title
+	blog.Description = description
 
 	if err := a.db.Save(blog).Error; err != nil {
 		c.HTML(http.StatusInternalServerError, "admin_config.html", gin.H{
@@ -755,32 +758,26 @@ func (a *AdminModule) index(c *gin.Context) {
 	subdomain := c.Param("subdomain")
 	blog, _ := c.Get("blog")
 
-	c.HTML(http.StatusOK, "admin_index.html", gin.H{
-		"subdomain": subdomain,
-		"blog":      blog,
-	})
-}
-
-func (a *AdminModule) updateBlogSettings(c *gin.Context) {
-	subdomain := c.Param("subdomain")
-	blogData, _ := c.Get("blog")
-	blog := blogData.(*models.Blog)
-
-	title := c.PostForm("title")
-	description := c.PostForm("description")
-
-	blog.Title = title
-	blog.Description = description
-
-	if err := a.db.Save(blog).Error; err != nil {
-		c.HTML(http.StatusInternalServerError, "admin_error.html", gin.H{
-			"error": "Erro ao salvar",
-			"blog":  blog,
+	// Se analytics não está configurado, mostrar mensagem
+	if a.analytics == nil {
+		c.HTML(http.StatusOK, "admin_index.html", gin.H{
+			"subdomain":        subdomain,
+			"blog":             blog,
+			"analyticsEnabled": false,
 		})
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/admin/"+subdomain+"/")
+	totalVisits := a.analytics.GetTotalVisits(blog.(*models.Blog).Subdomain)
+	topPosts := a.analytics.GetTopPages(blog.(*models.Blog).Subdomain, 3)
+
+	c.HTML(http.StatusOK, "admin_index.html", gin.H{
+		"subdomain":        subdomain,
+		"blog":             blog,
+		"analyticsEnabled": true,
+		"totalVisits":      totalVisits,
+		"topPosts":         topPosts,
+	})
 }
 
 func (a *AdminModule) listPosts(c *gin.Context) {

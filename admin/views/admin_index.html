@@ -1,34 +1,101 @@
 {{ template "admin_header.html" .}}
 
-{{ template "tinymde_component.html" .}}
+<h2>Estatísticas</h2>
 
-<h2>Inicio</h2>
-<form action="/admin/{{.subdomain}}/inicio" method="POST">
-    <label for="title" class="width">
-        Título do Blog
-        <input type="text" id="title" name="title" value="{{if .blog}}{{.blog.Title}}{{end}}" required>
-    </label>
-
-    <label for="description">
-        Página inicial (<a href="https://markdown.net.br/referencia-rapida/" target="_blank">Markdown</a>)
-        <textarea id="description" name="description" placeholder="Texto da página inicial" rows="25"></textarea>
-    </label>
-
-    <button type="submit">Salvar</button>
-</form>
-
-<script>
-    // Inicializar EasyMDE sem auto-save (página inicial não é rascunho)
-    const easyMDEManager = new EasyMDEManager({
-        textareaId: 'description',
-        autoSaveUrl: null
-    });
-
-    {{if .blog}}
-        {{if .blog.Description}}
-            easyMDEManager.setContent('{{.blog.Description}}');
+{{if not .analyticsEnabled}}
+<section>
+    <p>Analytics não está configurado. Verifique a conexão com o Redis.</p>
+</section>
+{{else}}
+<section>
+    <article>
+        <h3>Total de Visitas: {{.totalVisits}}</h3>
+    </article>
+    <article>
+        <h3>Posts mais visitados</h3>
+        {{if .topPosts}}
+        <div class="posts-chart-container">
+            {{range .topPosts}}
+            <div class="post-chart-row">
+                <div class="post-title">{{.Page}}</div>
+                <div class="post-bar-wrapper">
+                    <div class="post-bar" style="width: {{printf "%.2f" .Percentage}}%;">
+                        <span class="post-bar-value">{{.Count}}</span>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <p>Nenhuma visita registrada ainda.</p>
         {{end}}
-    {{end}}
-</script>
+    </article>
+</section>
+<style>
+    .posts-chart-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .post-chart-row {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .post-title {
+        flex: 0 0 300px;
+        font-size: 0.9rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .post-bar-wrapper {
+        flex: 1;
+        height: 30px;
+        background-color: #f0f0f0;
+        position: relative;
+    }
+
+    .post-bar {
+        height: 100%;
+        background-color: #4a90e2;
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+        min-width: 40px;
+        transition: background-color 0.2s;
+    }
+
+    .post-bar:hover {
+        background-color: #357abd;
+    }
+
+    .post-bar-value {
+        font-size: 0.8rem;
+        color: white;
+        font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+        .post-chart-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .post-title {
+            flex: 1;
+        }
+
+        .post-bar-wrapper {
+            width: 100%;
+        }
+    }
+</style>
+
+{{end}}
 
 {{ template "admin_footer.html" .}}

@@ -110,6 +110,16 @@ func (a *AnalyticsModule) GetAllBlogVisits(blog string) map[string]int64 {
 	return result
 }
 
+// GetTotalVisits retorna o total de visitas de um blog
+func (a *AnalyticsModule) GetTotalVisits(blog string) int64 {
+	all := a.GetAllBlogVisits(blog)
+	var total int64
+	for _, count := range all {
+		total += count
+	}
+	return total
+}
+
 // GetTopPages retorna as top N páginas mais visitadas de um blog
 func (a *AnalyticsModule) GetTopPages(blog string, limit int) []PageVisits {
 	all := a.GetAllBlogVisits(blog)
